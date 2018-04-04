@@ -316,6 +316,8 @@ sudo vim /etc/nginx/nginx.conf
 root         /var/www/wordpress;
 # nginxを再起動
 sudo systemctl restart nginx
+# PHP-FPMがapacheユーザーで動くので、とりあえずディレクトリ権限をapacheに変更。
+sudo chown -R apache:apache /var/www/wordpress
 ```
 
 これで準備はできた。まだデータベースの設定は動かないが、htmlなら表示できるはず。`gcp.capitalp.jp/readme.html`にアクセスし、設定が有効かどうか、確かめてみよう。
@@ -325,4 +327,349 @@ sudo systemctl restart nginx
 もちろん、ルートディレクトリにアクセスしようとすると、データベース接続エラーが発生する。残す作業はあと一つ、RDSで管理していたデータベースの移行である。
 
 ## データベース
+
+GCPでMySQLを利用するには、Cloud SQLインスタンスを作成する必要がある。これもVM同様、新たに作成しよう。左メニューの「SQL」をクリックすることでインスタンス作成ウィザードが立ち上がる。
+
+- データベースエンジンはMySQLを選択
+- 第2世代を選択
+- リージョンは`asia-northeast1`を、ゾーンは`asia-northeast1-b`を選択。VMに合わせる。
+- rootアカウント用のパスワードを生成し、控えておく。
+- マシンタイプ（詳細オプションを展開しないと表示されないので注意！）は一番安そうな`db-f1-micro`を選択。
+- バックアップを有効化する。東京リージョンで1GBあたり月0.22ドルなので、大した金額にはならないだろう。
+- フェイルオーバーレプリカは作成せず。これはおそらく、DBが死んだときのバックアップを作成しておき、障害時にさっと入れ替えるような仕組みだろう。DBのコストが倍になるはずなので、作成せず。
+- 「ネットワークの承認」は意味がわからなかったので設定せず。
+- メンテナンススケジュールは「おまかせ」にしておく。
+
+![設定パネルは隠れているのでクリックして展開しよう。](../images/04_14_mysql.png)
+
+設定が終わると、インスタンスの詳細を見ることができる。
+
+はて、WordPressはどうやったらこのMySQLサーバーに接続することができるのだろうか？　AWSでは[VPC](https://aws.amazon.com/jp/vpc/)という概念があり、EC2インスタンス（Webサーバー）とRDS（データベース）を同じVPCネットワークグループに放り込んでおけば、`capitalp.cbmqedvmcaxv.ap-northeast-1.rds.amazonaws.com`のようなURLで接続することができた。VPC外部からの接続はシャットダウンしているので、パスワードが漏れても安心だ。
+
+GCPの場合は[いくつかの接続方法](https://cloud.google.com/sql/docs/mysql/external-connection-methods?hl=ja&_ga=2.84237466.-2058163744.1511782493)があるようだが、どれもそれなりに複雑なようで、一番推奨されているのが[Cloud SQL Proxy](https://cloud.google.com/sql/docs/mysql/connect-compute-engine?hl=ja#gce-connect-proxy)という手法での接続のようである。
+
+![他の方法での接続はほとんど推奨されていない。](../images/04_15_recommeded_connection.png)
+
+ここで重要な概念「サービスアカウント」を説明しておこう。
+
+### サービスアカウントとは？
+
+サービスアカウントはIAMに存在する仮想アカウントである。Googleにおけるアカウントとは、普通メールアドレスを持った実際に存在する人間を思い浮かべるが、GCPのようなクラウドサービスを運営する場合、「メールアドレスとパスワードを持つ仮のユーザー」を作成し、そのアカウントに作業を代行させることが多い。AWSにも同様の仕組みは存在する。要するに、サーバーの擬人化だと考えてもらえばいい。
+
+では、さっそく先ほど作成したVMインスタンスのサービスアカウントの鍵を作成しよう。VM一覧の右端にある「オプション」から「キーを作成」を選ぶと、鍵がダウンロードできる。この鍵は一度しかダウンロードできないので、大事に保管しよう。形式はJSONで構わない。
+
+![VMインスタンスに鍵を作成する](../images/04_16_generate_key.png)
+
+この鍵をダウンロードすると、なにやらごちゃごちゃと書かれたJSONファイルがダウンロードされる。大事に保存しておこう。今回はSSHの鍵と同様にローカルのMacに`~/.ssh/google/capitalp-ce01.json`として保存した。
+
+### cloud\_sql\_proxyのインストール
+
+さて、まずはローカルのMacから接続してみよう。そのためには、cloud_sql_proxyというツールをインストールしなければならない。まずは[マニュアル通り](https://cloud.google.com/sql/docs/mysql/connect-admin-proxy?hl=ja)に進めてみよう。
+
+```
+# ホームフォルダ/binにコマンドをインストール
+cd ~/bin
+curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.darwin.amd64
+chmod +x cloud_sql_proxy
+```
+
+これで`cloud_sql_proxy`と打てばコマンドが実行できる。続いて、UNIXソケット接続を開始しよう。TCPでも接続はできるのだが、筆者はすでにローカルにMySQLをインストールしてしまっているので、ポート3306がバッティングしてしまう。そのため、ソケットファイルで接続するというわけだ。
+
+```
+# ホームディテクトリに移動
+cd ~
+# ソケットファイルの保存場所を作成（不可視フォルダに）
+mkdir .cloud_sql_proxy
+chmod 777 .cloud_sql_proxy
+# 接続を開始
+cloud_sql_proxy -dir=.cloud_sql_proxy -instances=capitalp-182517:asia-northeast1:capitalp-db-master -credential_file=.ssh/google/capitalp-ce01.json
+```
+
+コマンドの最後に` &`をつけるとデーモン起動になるので、もし必要ならMacの起動時に実行するような設定にしておくといいだろう。
+
+これで準備完了。接続コマンドは以下の通り。もし`mysql`クライアントがインストールされていない場合はしておこう。
+
+```
+mysql -u root -p -S ~/.cloud_sql_proxy/capitalp-182517\:asia-northeast1\:capitalp-db-master
+```
+
+`-S`オプションでソケットファイルを指定している。たぶんだが、複数のDBインスタンスが存在すれば、その分だけソケットファイルが作られるのだろう。
+
+![接続成功！](../images/04_17_mysql_connected.png)
+
+これで無事接続を確認できた。筆者はCLIが好きではないので、[Sequel Pro](https://www.sequelpro.com)でも接続できるようにしておく。ソケット接続を選択すれば普通に接続できる。
+
+![Sequel Proの設定画面。ポイントはソケットをフルパスで書くこと。](../images/04_18_sequel_pro.png)
+
+それでは、wordpressというデータベースを作成し、インポートしておこう。あとはWebサーバーから接続できれば完了だ。
+
+### VMインスタンスからの接続
+
+さて、ローカルからの接続はできたので、同じことをVMインスタンスからもやればいいのだろう。ちょっと面倒だが、SSHターミナルを開いて[マニュアル通りに設定](https://cloud.google.com/sql/docs/mysql/connect-compute-engine?hl=ja)を開始しよう。
+
+```
+# まずはmysqlのインストール
+sudo yum install mysql -y
+# cloud_sql_proxyのインストール
+cd /usr/local/bin
+sudo wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy
+sudo chmod +x cloud_sql_proxy
+# 鍵をインストール
+sudo mkdir /cloudsql
+# VIMでJSON鍵ファイルをコピペ
+sudo vim /cloudsql/capitalp-ce01.json
+# TCPでプロキシを開始
+cloud_sql_proxy -instances=capitalp-182517:asia-northeast1:capitalp-db-master=tcp:3306 -credential_file=/cloudsql/capitalp-ce01.json
+lp-ce01.json &
+# 動作を確認
+ps aux | grep cloud_sql_proxy
+takahas+  7131  0.1  0.2   8060  4228 pts/0    Sl   07:57   0:00 cloud_sql_proxy -instances=capitalp-182517:asia-northeast1:capitalp-db-master=tcp:3306 -credential_
+file=/cloudsql/capitalp-ce01.json
+# mysqlで接続チェック
+mysql -u root -p -h 127.0.0.1
+password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 16408
+```
+
+さて、それではいよいよWordPressの接続設定を変更し、動作を確認しよう。接続先は`127.0.0.1`である。
+
+```
+cd  /var/www/wordpress
+sudo vim wp-config.php
+```
+
+接続が確認できたかどうかを調べるために、WP-CLIを利用しよう。Linuxの場合、`/usr/local/bin`にインストールすればどのユーザーからも利用できるので、そのようにする。
+
+```
+# WP-CLIをインストール
+cd /usr/local/bin
+sudo curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+sudo mv wp-cli.phar wp
+sudo chmod +x wp
+# WordPressディレクトリに移動
+cd /var/www/wordpress
+# データベースの値を取得するコマンド
+wp option get home
+2018/04/04 08:11:13 New connection for "capitalp-182517:asia-northeast1:capitalp-db-master"
+https://capitalp.jp
+2018/04/04 08:11:15 Client closed local connection on 127.0.0.1:3306
+```
+
+なにやら接続の文字列が出てしまっているが、無事接続はできているようだ。なお、現在は移行中なので、一時的にドメイン名をサブドメインに書換えることも忘れないでおこう。
+
+```
+wp search-replace 'https://capitalp.jp' 'https://gcp.capitalp.jp'
+```
+
+### 自動起動の設定
+
+VMインスタンスはメンテナンスなどで勝手に再起動されることがある。このため、自動起動を行なっておく必要がある。この情報には公式のドキュメントがなかったので、ブログ記事[GCP Cloud SQLにCloud SQL Proxyで接続しよう。Systemd化してデーモン化！](https://sys-guard.com/post-15640/)を頼りにsystemdによるサービス登録を行う。
+
+```
+sudo vim /etc/systemd/system/cloud_sql_proxy.service
+
+[Unit]
+Description = Cloud SQL Proxy Daemon
+After = network.target
+
+[Service]
+ExecStart = /usr/local/bin/cloud_sql_proxy -dir=/cloudsql -instances=analog-vault-9999999:asia-northeast1:sgdb1 -credential_file=/root/GQL-Connect.json
+ExecStop = /bin/kill ${MAINPID}
+ExecReload = /bin/kill -HUP ${MAINPID}
+Restart = always
+Type = simple
+LimitNOFILE=65536
+
+[Install]
+WantedBy = multi-user.target
+```
+
+これで自動起動はできたはずなので、実際にVMを再起動して正しく動くかチェックする。
+
+```
+# 起動する
+sudo systemctl start cloud_sql_proxy
+mysql -u root -p -h 127.0.0.1
+Enter password: 
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+# 自動起動を登録
+sudo systemctl enable cloud_sql_proxy
+# 再起動
+sudo reboot
+# 再接続し、mysqlに繋がるかチェック
+mysql -u root -p -h 127.0.0.1
+```
+
+## nginxの設定
+
+それではいよいよnginxの設定をWordPress向きにチューニングすれば終了だ。少し長いが、`/etc/nginx/nginx.conf`に書いてあった設定を3つの設定ファイルにわける。
+
+### nginx.conf
+
+`/etc/nginx/nginx.conf`を次のように短く修正する。サーバーの設定は`/etc/nginx/sites-enabled`フォルダのファイルにわける。
+
+```
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+# Load dynamic modules. See /usr/share/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+events {
+    worker_connections 1024;
+}
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log  /var/log/nginx/access.log  main;
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+    client_max_body_size 256m;
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*.conf;
+}
+```
+
+### fpm.conf
+
+PHP-FPMで動作させる必要のあるファイル（PHPのこと）のための設定を別ファイル`/etc/nginx/fpm.conf`に切り出す。
+
+```
+fastcgi_pass   php-fpm; #see upstream
+fastcgi_index  index.php;
+fastcgi_read_timeout 120;
+fastcgi_connect_timeout 120;
+fastcgi_send_timeout 120;
+fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+fastcgi_buffer_size 128k;
+fastcgi_buffers 4 256k;
+fastcgi_busy_buffers_size 256k;
+fastcgi_temp_file_write_size 256k;
+include        fastcgi_params;
+```
+
+### cloudflare.conf
+
+これはCapital Pに独自の要件であるが、CloudFlareというCDN経由の場合、正しいIPを渡すために設定を行う必要がある。この設定を`/etc/nginx/cloudflare.conf`に分けておく。
+
+```
+set_real_ip_from 103.21.244.0/22;
+set_real_ip_from 103.22.200.0/22;
+set_real_ip_from 103.31.4.0/22;
+set_real_ip_from 104.16.0.0/12;
+set_real_ip_from 108.162.192.0/18;
+set_real_ip_from 131.0.72.0/22;
+set_real_ip_from 141.101.64.0/18;
+set_real_ip_from 162.158.0.0/15;
+set_real_ip_from 172.64.0.0/13;
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 188.114.96.0/20;
+set_real_ip_from 190.93.240.0/20;
+set_real_ip_from 197.234.240.0/22;
+set_real_ip_from 198.41.128.0/17;
+set_real_ip_from 199.27.128.0/21;
+set_real_ip_from 2400:cb00::/32;
+set_real_ip_from 2606:4700::/32;
+set_real_ip_from 2803:f800::/32;
+set_real_ip_from 2405:b500::/32;
+set_real_ip_from 2405:8100::/32;
+set_real_ip_from 2c0f:f248::/32;
+set_real_ip_from 2a06:98c0::/29;
+
+# use any of the following two
+real_ip_header CF-Connecting-IP;
+#real_ip_header X-Forwarded-For;
+```
+
+### capitalp.jp.conf
+
+これはサーバーに固有の設定である。`/etc/nginx/sites-enabled/capitalp.jp.conf`では上記のファイルを読み込みつつ、WordPressが動作するような要件を設定する。Codexに[詳しい設定](https://wpdocs.osdn.jp/Nginx)が載っているので、参考にしてみるといいだろう。
+
+```
+server {
+    listen       80 default_server;
+    listen       [::]:80 default_server;
+    server_name  capitalp.jp default;
+    index index.php index.html;
+    root /var/www/wordpress;
+    # Set Real IP from CloudFlare
+    include cloudflare.conf;
+    # Redirect everything if not SSL
+    if ( $http_x_forwarded_proto != "https" ) {
+        return 301 https://capitalp.jp$request_uri$is_args$args;
+    }
+    # Avoid annoying error messages.
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+    # Avoid non-jetpack access
+    location ~ ^/xmlrpc\.php {
+        if ( $http_user_agent !~* jetpack ) {
+            return 403;
+        }
+        include fpm.conf;
+    }
+    # Log cache status
+    add_header X-SSL-Status $http_x_forwarded_proto;
+    # Cache static files 1 year
+    location ~ \.(gif|jpe?g|png|ico|js|css|woff|otf|svg|eot)$ {
+        expires 365d;
+        access_log off;
+        add_header Cache-Control public;
+        etag off;
+        break;
+    }
+    # Add trailing slash to */wp-admin requests.
+    rewrite /wp-admin$ https://$host$uri/ permanent;
+    # deny load scripts
+    location ~ ^/wp-admin/load-(scripts|styles)\.php {
+        deny all;
+        break;
+    }
+    # Bypass to PHP-FPM.
+    location ~ \.php$ {
+        include fpm.conf;
+    }
+    # Hide dot files
+    location ~ /\. {
+        deny all;
+    }
+    # Permalink
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+}
+```
+
+ファイルを書き終えたら、`sudo nginx -t`で設定ファイルにミスがないかどうか確認しよう。問題ないことを確認したら、リロードを行う。
+
+```
+sudo systemctl restart nginx
+```
+
+これで動作が完了した。`https://gcp.capitalp.jp`にアクセスしてみると、表示が確認できた。メディアのアップロードも試しに行ってみたが、無事動いている様子。
+
+## 本番移行作業
+
+これで本番移行準備が整った。あとやるべきことは以下の通り。
+
+- CRONタスクのコピー
+- DNS(CloudFlare)の切り替え
+- 以降準備中に新しい記事が公開されているので、ファイルとデータベースをもう一度コピー
+
+ぐらいだろうか。実際にやってみたところ、特に問題なく動いているようだ。
+
 
