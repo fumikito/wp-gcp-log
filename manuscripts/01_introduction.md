@@ -6,7 +6,7 @@
 
 WordPressをホスティングする際、いくつかの選択肢がある。かなりの規模まではレンタルサーバー（共有・占有）で事足りるが、一定以上の規模のWebサイトでは、クラウド・サービスを利用することが当たり前となってきた。とりわけ、月間数千万ページビュー以上のサイトにおいては、クラウドサービスが提供するスケーラビリティと柔軟性が魅力だ。
 
-クラウドサービスはいくつかあるが、日本におけるWordPressの利用ケースとしては、[Amazon Web Service](https://aws.amazon.com)(AWS)がもっとも著名である。日本最古の公式WordPressコンサルタントであった株式会社デジタルキューブの提供する[AMIMOTO](https://www.digitalcube.jp/our-solutions/)というAMI(Amazon Machine Image)によって、WordPressのセットアップを容易に行えるようにもなったのも一因だろう。ある意味で、WordPressで大規模ホスティングをする場合、AWSは定番となっている。
+クラウドサービスはいくつかあるが、日本におけるWordPressの利用ケースとしては、[Amazon Web Services](https://aws.amazon.com)(AWS)がもっとも著名である。日本最古の公式WordPressコンサルタントである株式会社デジタルキューブの提供する[AMIMOTO](https://www.digitalcube.jp/our-solutions/)というAMI(Amazon Machine Image)によって、WordPressのセットアップを容易に行えるようにもなったのも一因だろう。ある意味で、WordPressで大規模ホスティングをする場合、AWSは定番となっている。
 
 そんな状況において、2017年頃からGoogle Cloud Platform(GCP)についての評判を聞くようになった。具体的には、以下のようなサービスである。
 
