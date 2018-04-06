@@ -58,17 +58,17 @@ GCPにも[Cloud DNS](https://cloud.google.com/dns/?hl=ja)というサービス�
 
 ### メールサーバー
 
-さて、これはWordPressの問題といえるのかわからないが、AWSにある[SES](https://aws.amazon.com/jp/ses/)というメール送信サービスにあたるものが[存在せず](https://cloud.google.com/compute/docs/tutorials/sending-mail/?hl=ja)、インスタンスからのメール送信も「デフォルトでブロック」されているようだ。SendGridやMailgunなどのサードパーティーツールもしくはG Suiteによるメール送信を推奨している。
+さて、これはWordPressというよりはサービス運営に必要な機能だ。AWSにある[SES](https://aws.amazon.com/jp/ses/)というメール送信サービスにあたるものがGCPには[存在せず](https://cloud.google.com/compute/docs/tutorials/sending-mail/?hl=ja)、インスタンスからのメール送信も「デフォルトでブロック」されているようだ。SendGridやMailgunなどのサードパーティーツールもしくはG Suiteによるメール送信を推奨している。
 
-Capital Pではたまたま筆者が作った[hamail](https://github.com/hametuha/hamail)というSendGrid経由でメールを送信するプラグインを利用しているので問題はないのだが、これは一つハマりポイントである。
+Capital Pではたまたま筆者が作った[Hamail](https://github.com/hametuha/hamail)というSendGrid経由でメールを送信するプラグインを利用しているので問題はないのだが、これは一つハマりポイントである。
 
-問題は受信をどうするか、である。Capital Pでは一応メールアドレスを利用しているので、この受け取りをどうするか。G Suiteは利用者あたりで課金されるため、Capital PのためだけにG Suiteを申し込むのは現実的ではない。となると、残念ながらメールの受信に関してはSESを使い続けざるを得ないようだ。
+さらに問題は受信をどうするか、である。Capital Pではサービスドメイン(capitalp.jp)でのメールアドレスを利用しているので、この受け取りをどうするか。G Suiteは利用者あたりで課金されるため、Capital PのためだけにG Suiteを申し込むのは現実的ではない。となると、残念ながらメールの受信に関してはSESを使い続けざるを得ないようだ。
 
 ### キャッシュサーバー
 
 これは必須ではないのだが、WordPressの[オブジェクトキャッシュ機能](https://wpdocs.osdn.jp/%E3%82%AF%E3%83%A9%E3%82%B9%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9/WP_Object_Cache)を使うにあたり、MemcachedやRedisのようなインメモリデータベースをキャッシュサーバーとして使うと、かなりの高速化が期待できるし、そのためのプラグインも存在している。
 
-ただし、[Amazon ElasticCache](https://aws.amazon.com/jp/elasticache/)のようなキャッシュサーバーサービスはGCPに存在しないようだ。これは移行作業を行いながら代替案を探すことを試みたい。
+ただし、[Amazon ElastiCache](https://aws.amazon.com/jp/elasticache/)のようなキャッシュサーバーサービスはGCPに存在しないようだ。これは移行作業を行いながら代替案を探すことを試みたい。
 
 ====================
 
@@ -90,7 +90,7 @@ AWSには[Lambda](http://aws.amazon.com/jp/lambda/)というサーバーレス�
 
 ### 機械学習
 
-Googleは機械学習のジャンルでたびたび画期的な論文やサービスを発表している。棋で人類を打ち破ったAlphaGoもGoogle参加の企業だ。筆者は門外漢だが、なんとなくAmazonやAppleよりもGoogleに一日の長があるような気がする。
+Googleは機械学習のジャンルでたびたび画期的な論文やサービスを発表している。囲碁で人類を打ち破ったAlphaGoもGoogleのグループ企業だ。筆者は機械学習の門外漢だが、なんとなくAmazonやAppleよりもGoogleに一日の長があるような気がする。
 
 機械学習用のリソースをまるっと提供してくれる[Cloud Machine Learning Engine](https://cloud.google.com/ml-engine/?hl=ja)もさることながら、求職者と仕事をマッチングさせるサービス、画像分析などなど、ユニークなものも多い。
 
@@ -98,7 +98,7 @@ WordPressとの連携を行う場合、翻訳やテキスト分析、音声合�
 
 ### 管理用ツール
 
-ロギング、監視などといった補助ツールのほか、ユーザーの権限を管理するためのIAMも提供される。受託請負などでもある程度の柔軟な管理権限が可能だ。ただし、ロール（役割）が多岐にわたるので、しっかりと理解して使うにはかなりの経験が必要だ。
+ロギング、監視などといった補助ツールのほか、ユーザーの権限を管理するためのIAMも提供される。受託請負などでもある程度の柔軟な管理権限が可能だ。ただし、ロール（役割）が多岐にわたるので、しっかりと理解して使うにはかなりの経験が必要。
 
 ## まとめ
 
