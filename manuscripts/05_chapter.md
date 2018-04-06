@@ -1,10 +1,10 @@
-4章: Google App Engine による WordPress サイトの運営
+# 4章: Google App Engine による WordPress サイトの運営
 
 この章では、Google App Engine（以下 GAE） を利用して WordPress サイトを運営する方法について解説する。
 
 ## Google App Engine とは
 
-Google App Engine とは、Google Cloud Platform によって提供されるサービスの一つであり、PaaS (Platform As A Service) サービスの一つである。
+Google App Engine とは、Google Cloud Platform によって提供されるサービスの一つであり、PaaS (Platform As A Service) の一つである。
 
 前章で述べた Google Compute Engine は、root 権限が与えられ利用者のニーズに応じて好きな言語やフレームワークを利用できるが、サーバーにインストールされる OS やミドルウエア、さらに冗長化構成などもユーザー自身で構成し管理する必要がある。
 
