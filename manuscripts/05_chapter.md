@@ -226,7 +226,7 @@ $ cloud_sql_proxy \
 
 コマンドが成功すると、`Ready for new connections` と表示され待機状態となる。この状態で、ローカルから `mysql` コマンドを利用して MySQL インスタンスに接続することが可能になる。
 
-では、mysql コマンドを使って実際に接続してみよう。
+動作確認のため、mysql コマンドを使って実際に接続してみよう。
 
 ```
 $ mysql -h 127.0.0.1 -u root -p
@@ -236,13 +236,18 @@ $ mysql -h 127.0.0.1 -u root -p
 
 ### WordPress 用のデータベースを作成する
 
-以下のコマンドで、WordPress 用のデータベースを作成しよう。パスワードは、先ほど作成したパスワードに置き換えること。`[YOUR_MYSQL_ROOT_PASSWORD]` には、先ほど設定した MySQL の root パスワードを、`[YOUR_WP_DB_PASSWORD]` には、WordPress 用データベースのパスワードを指定しよう。
+以下のコマンドで、WordPress 用のデータベースを作成しよう。`[YOUR_MYSQL_ROOT_PASSWORD]` には先ほど設定した MySQL の root パスワードを、`[YOUR_WP_DB_PASSWORD]` には、WordPress 用データベースのパスワードを指定しよう。
 
 ```
 $ echo 'create database tutorialdb;' | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
 $ echo "create user 'tutorial-user'@'%' identified by '[YOUR_WP_DB_PASSWORD]';" | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
 $ echo "grant all on tutorialdb.* to 'tutorial-user'@'%';" | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
 ```
+
+ここで作成したデータベースのデータベース名、ユーザー名は以下の通りである。
+
+* データベース名: `tutorialdb`
+* データベースユーザー名: `tutorial-user`
 
 ### WordPress のセットアップ
 
@@ -254,7 +259,7 @@ $ cd php-docs-samples/appengine/wordpress
 $ composer install
 ```
 
-以上で、WordPress をセットアップするためのヘルパーコマンドがインストールされるので、それを利用して WordPress 環境を構築する。 `[YOUR_PROJECT_ID]` を実際の プロジェクト ID に置き換えること。
+以上で WordPress をセットアップするためのヘルパーコマンドがインストールされるので、それを利用して WordPress 環境を構築する。 `[YOUR_PROJECT_ID]` を実際の プロジェクト ID に、`[YOUR_WP_DB_PASSWORD]` には先ほど指定した WordPress 用のデータベースパスワードを指定しよう。
 
 ```
 $ php wordpress-helper.php setup -n \
@@ -281,7 +286,7 @@ cloud_sql_instances: [YOUR_PROJECT_ID]:asia-northeast1:tutorial-sql-instance
 define('DB_HOST', ':/cloudsql/[YOUR_PROJECT_ID]:asia-northeast1:tutorial-sql-instance');
 ```
 
-WordPress の準備が完了したので WP-CLI コマンドを利用してローカルで WordPress を動かしてみよう。WP-CLI には `wp server` という PHP のビルトインコマンドを利用したサーバーを起動するためのコマンドがあるので、それを利用すればローカル環境にウェブサーバーがインストールされている必要がない。
+WordPress の準備が完了したので WP-CLI コマンドを利用してローカルで WordPress を動かしてみよう。WP-CLI には `wp server` という PHP のビルトインコマンドを利用したサーバーを起動するためのコマンドがあるので、それを利用すればローカル環境にウェブサーバーがインストールされている必要はない。
 
 まず、以下のコマンドを実行して WP-CLI の設定ファイルを作成して WordPress のドキュメントルートを指定する。
 
@@ -296,7 +301,7 @@ $ echo "path: wordpress" > wp-cli.yml
 $ wp server
 ```
 
-ブラウザで、`http://localhost:8080` にアクセスして WordPress のインストーラーが表示されていれば成功である。 インストールを完了させておこう。
+ブラウザで、`http://localhost:8080` にアクセスして WordPress のインストーラーが表示されていれば成功である。 ついでにインストールを完了させておこう。
 
 ![](https://www.evernote.com/l/ABUfoesBDoxNmor44A4unJYvSQ4qRqZT2MgB/image.png)
 
