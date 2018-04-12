@@ -262,7 +262,7 @@ $ php wordpress-helper.php setup -n \
 --db_password=1111
 ```
 
-以上で WordPress の準備が完了したので WP-CLI コマンドを利用してローカルで WordPress を動かしてみよう。
+WordPress の準備が完了したので WP-CLI コマンドを利用してローカルで WordPress を動かしてみよう。WP-CLI には `wp server` という PHP のビルトインコマンドを利用したサーバーを起動するためのコマンドがあるので、それを利用すればローカル環境にウェブサーバーがインストールされている必要がない。
 
 まず、以下のコマンドを実行して WP-CLI の設定ファイルを作成して WordPress のドキュメントルートを指定する。
 
