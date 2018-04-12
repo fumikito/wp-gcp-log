@@ -193,7 +193,7 @@ JSON ファイルがダウンロードされるので、このファイルはど
 `tutorial-sql-instance` はインスタンス名であり、任意のインスタンス名に変更可能である。
 
 ```
-gcloud sql instances create tutorial-sql-instance \
+$ gcloud sql instances create tutorial-sql-instance \
 --activation-policy=ALWAYS \
 --tier=db-n1-standard-1
 ```
@@ -207,7 +207,7 @@ $ gcloud sql users set-password root % --instance=tutorial-sql-instance --passwo
 最後に、Cloud SQL Proxy を利用して、ローカル環境から MySQL に接続するためのサーバーを起動しよう。
 
 ```
-cloud_sql_proxy \
+$ cloud_sql_proxy \
 -dir /tmp/cloudsql \
 -instances=[YOUR_PROJECT_ID]:us-central1:tutorial-sql-instance=tcp:3306 \
 -credential_file=/path/to/credential.json
