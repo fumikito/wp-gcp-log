@@ -24,11 +24,86 @@ GAE 上で WordPress を可動させれば、OS やミドルウエアのアッ�
 
 GAE 上に WordPress をインストールするには、少なくとも以下のソフトウエアがインストールされている必要である。
 
+* Google Cloud SDK のインストール
 * PHP
-* MySQL + Cloud SQL Proxy
+* MySQL クライアント + Cloud SQL Proxy
 * WP-CLI
 
-今回は、macOS でのセットアップを順に解説していく。
+今回は、macOS でのセットアップを順に解説していく。 Homebrew を使用するのであらかじめインストールしておくこと。
+
+https://brew.sh/
+
+### Google Cloud SDK のインストール
+
+Google Cloud SDK とは、GCP を利用するための一連のツールで、`gcloud` などのコマンドラインツールもこれらの中に含まれる。
+
+本書では、可能な部分はコマンドラインですすめていくので、このツールをあらかじめインストールしよう。
+
+https://cloud.google.com/sdk/docs/quickstart-macos
+
+詳細は後述するが、`gcloud init` コマンドを使用してこの時点で初期設定を行っておいてもよい。
+
+### PHP のインストール
+
+まず PHP をインストールする。今回は、本書執筆時点での最新版 PHP 7.2 をインストールしよう。
+
+```
+$ brew install php
+```
+
+### MySQL のインストール
+
+次に MySQL をインストールしよう。 GAE を利用する際には、ローカルで MySQL サーバーを起動する必要はないが、動作確認等で必要となることもあるので、サーバーも含めてインストールする。
+
+```
+$ brew install mysql
+```
+
+macOS 起動時に MySQL を起動するには以下のコマンドを実行すればよい。
+
+```
+$ brew services start mysql
+```
+
+GAE では、Cloud SQL Proxy というローカル環境から GCP の MySQL インスタンスへ接続するためのツールも公開されているが、これは MySQL サーバーがローカルで起動していると起動しないので、Cloud SQL Proxy を起動する際には以下のコマンドで停止する必要がある。
+
+```
+$ brew services stop mysql
+```
+
+### Cloud SQL Proxy のインストール
+
+GCP 内の MySQL にローカルから接続するためのツール、Cloud SQL Proxy をインストールしよう。 以下のサイトに記載されている方法で行えばよい。
+
+https://cloud.google.com/sql/docs/mysql-connect-proxy#install
+
+### WP-CLI のインストール
+
+WordPress をコマンドラインから操作するためのツール、WP-CLI をインストールしよう。
+
+```
+$ curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+$ chmod +x wp-cli.phar
+$ mv wp-cli.phar /usr/local/bin/wp
+```
+
+以上のコマンドを順番に実行したら最後に動作確認をしてみよう。 エラーが出ずに以下のような出力が得られれば問題なく動作している。
+
+```
+$ wp --info
+OS:	Darwin 17.4.0 Darwin Kernel Version 17.4.0: Sun Dec 17 09:19:54 PST 2017; root:xnu-4570.41.2~1/RELEASE_X86_64 x86_64
+Shell:	/bin/bash
+PHP binary:	/usr/local/Cellar/php@7.0/7.0.29/bin/php
+PHP version:	7.0.29
+php.ini used:	/usr/local/etc/php/7.0/php.ini
+WP-CLI root dir:	phar://wp-cli.phar
+WP-CLI vendor dir:	phar://wp-cli.phar/vendor
+WP_CLI phar path:	/Users/miya/repos/wp-gcp-log
+WP-CLI packages dir:	/Users/miya/.wp-cli/packages/
+WP-CLI global config:
+WP-CLI project config:
+WP-CLI version:	2.0.0-alpha-cb09568
+```
 
 ## Google App Engine の準備
 
