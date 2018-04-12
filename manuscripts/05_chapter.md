@@ -26,14 +26,14 @@ GAE 上で WordPress を可動させれば、OS やミドルウエアのアッ�
 
 はじめにローカル環境に必要なソフトウエアをインストールしてみよう。
 
-GAE 上に WordPress をインストールするには、少なくとも以下のソフトウエアがインストールされている必要である。
+GAE 上に WordPress をインストールするには、少なくとも以下のソフトウエアがインストールされている必要がある。
 
-* Google Cloud SDK のインストール
+* Google Cloud SDK
 * PHP
 * MySQL クライアント + Cloud SQL Proxy
 * WP-CLI
 
-今回は、macOS でのセットアップを順に解説していく。 Homebrew を使用するのであらかじめインストールしておくこと。
+今回は、macOS でのセットアップ方法を解説していく。 Homebrew を使用するのであらかじめインストールしておくこと。
 
 https://brew.sh/
 
