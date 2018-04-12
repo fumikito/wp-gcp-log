@@ -198,6 +198,7 @@ JSON ファイルがダウンロードされるので、このファイルはど
 
 ```
 $ gcloud sql instances create tutorial-sql-instance \
+--region=asia-northeast1 \
 --activation-policy=ALWAYS \
 --tier=db-n1-standard-1
 ```
