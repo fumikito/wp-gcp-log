@@ -213,7 +213,7 @@ $ gcloud sql users set-password root % --instance=tutorial-sql-instance --passwo
 ```
 $ cloud_sql_proxy \
 -dir /tmp/cloudsql \
--instances=[YOUR_PROJECT_ID]:us-central1:tutorial-sql-instance=tcp:3306 \
+-instances=[YOUR_PROJECT_ID]:asia-northeast1:tutorial-sql-instance=tcp:3306 \
 -credential_file=/path/to/credential.json
 ```
 
@@ -258,7 +258,7 @@ $ composer install
 ```
 $ php wordpress-helper.php setup -n \
 -d ./wordpress-project \
---db_region=us-central1 \
+--db_region=asia-northeast1 \
 --db_instance=tutorial-sql-instance \
 --db_name=tutorialdb \
 --db_user=tutorial-user \
