@@ -194,7 +194,7 @@ JSON ファイルがダウンロードされるので、このファイルはど
 
 まず、以下のコマンドで Cloud SQL 第2世代インスタンスを作成して、MySQL サーバーを起動しよう。
 
-`tutorial-sql-instance` はインスタンス名であり、任意のインスタンス名に変更可能である。
+`tutorial-sql-instance` はインスタンス名であり、任意のインスタンス名に変更可能である。 今回は、リージョンに `asia-northeast1` (東京)を指定する。
 
 ```
 $ gcloud sql instances create tutorial-sql-instance \
@@ -203,10 +203,10 @@ $ gcloud sql instances create tutorial-sql-instance \
 --tier=db-n1-standard-1
 ```
 
-次に、このインスタンスの MySQL root パスワードを以下のコマンドで設定しよう。この例ではパスワードに `1111` という文字列を使用しているが、安全なパスワードを使用することを強く推奨する。
+次に、このインスタンスの MySQL root パスワードを以下のコマンドで設定しよう。安全なパスワードを使用することを強く推奨する。
 
 ```
-$ gcloud sql users set-password root % --instance=tutorial-sql-instance --password=1111
+$ gcloud sql users set-password root % --instance=tutorial-sql-instance --password=[YOUR_MYSQL_ROOT_PASSWORD]
 ```
 
 最後に、Cloud SQL Proxy を利用して、ローカル環境から MySQL に接続するためのサーバーを起動しよう。
@@ -236,12 +236,12 @@ $ mysql -h 127.0.0.1 -u root -p
 
 ### WordPress 用のデータベースを作成する
 
-以下のコマンドで、WordPress 用のデータベースを作成しよう。パスワードは、先ほど作成したパスワードに置き換えること。
+以下のコマンドで、WordPress 用のデータベースを作成しよう。パスワードは、先ほど作成したパスワードに置き換えること。`[YOUR_MYSQL_ROOT_PASSWORD]` には、先ほど設定した MySQL の root パスワードを、`[YOUR_WP_DB_PASSWORD]` には、WordPress 用データベースのパスワードを指定しよう。
 
 ```
-$ echo 'create database tutorialdb;' | mysql -h 127.0.0.1 -u root --password=1111
-$ echo "create user 'tutorial-user'@'%' identified by '1111';" | mysql -h 127.0.0.1 -u root --password=1111
-$ echo "grant all on tutorialdb.* to 'tutorial-user'@'%';" | mysql -h 127.0.0.1 -u root --password=1111
+$ echo 'create database tutorialdb;' | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
+$ echo "create user 'tutorial-user'@'%' identified by '[YOUR_WP_DB_PASSWORD]';" | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
+$ echo "grant all on tutorialdb.* to 'tutorial-user'@'%';" | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
 ```
 
 ### WordPress のセットアップ
@@ -264,7 +264,21 @@ $ php wordpress-helper.php setup -n \
 --db_name=tutorialdb \
 --db_user=tutorial-user \
 -p [YOUR_PROJECT_ID] \
---db_password=1111
+--db_password=[YOUR_WP_DB_PASSWORD]
+```
+
+さて、本書執筆時点では上の `wordpress-helper.php` にバグがあり、データベースのリージョンが正しく反映されない。したがって以下の例のように `asia-northeast1` という文字列を挿入して正しいリージョンを設定する必要がある。
+
+`wordpress-project/app.yaml` (5行目):
+
+```
+cloud_sql_instances: [YOUR_PROJECT_ID]:asia-northeast1:tutorial-sql-instance
+```
+
+`wordpress-project/wordpress/wp-config.php` (49行目):
+
+```
+define('DB_HOST', ':/cloudsql/[YOUR_PROJECT_ID]:asia-northeast1:tutorial-sql-instance');
 ```
 
 WordPress の準備が完了したので WP-CLI コマンドを利用してローカルで WordPress を動かしてみよう。WP-CLI には `wp server` という PHP のビルトインコマンドを利用したサーバーを起動するためのコマンドがあるので、それを利用すればローカル環境にウェブサーバーがインストールされている必要がない。
@@ -292,6 +306,27 @@ GAE に WordPress をデプロイするには、以下のコマンドを実行�
 
 ```
 $ gcloud app deploy
+```
+
+はじめてこのコマンドを実行する際にはリージョンを選択する必要があるので、`asia-northeast1`（東京）を選択しよう。
+
+```
+Please choose the region where you want your App Engine application
+located:
+
+ [1] europe-west3  (supports standard and flexible)
+ [2] us-east1      (supports standard and flexible)
+ [3] europe-west2  (supports standard and flexible)
+ [4] us-central    (supports standard and flexible)
+ [5] us-east4      (supports standard and flexible)
+ [6] europe-west   (supports standard and flexible)
+ [7] asia-south1   (supports standard and flexible)
+ [8] australia-southeast1 (supports standard and flexible)
+ [9] asia-northeast1 (supports standard and flexible)
+ [10] northamerica-northeast1 (supports standard and flexible)
+ [11] southamerica-east1 (supports standard and flexible)
+ [12] cancel
+Please enter your numeric choice:  9
 ```
 
 デプロイが完了したら、以下のコマンドを実行すればブラウザで開くことができる。
