@@ -129,7 +129,7 @@ Please enter numeric choice or text value (must exactly match list
 item):  
 ```
 
-今回は新しく作りたいと思いますので、`Create a new project` を選択してみよう。その後プロジェクト名の入力を求められる。
+今回は新しく作りたいので、`Create a new project` を選択してみよう。その後プロジェクト名の入力を求められる。
 
 ```
 Enter a Project ID. Note that a Project ID CANNOT be changed later.
@@ -137,10 +137,10 @@ Project IDs must be 6-30 characters (lowercase ASCII, digits, or
 hyphens) in length and start with a lowercase letter.
 ```
 
-プロジェクト ID を入力する際には以下の2点にご注意しよう。
+プロジェクト ID を入力する際には以下の2点に注意しよう。
 
 * プロジェクト ID をあとから変更することはできない。
-* プロジェクト ID は、GCP 全体でユニークである必要があるので、`capitalp-wordpress` などのようにプレフィックスをつけるとよい。
+* プロジェクト ID は、GCP 全体でユニークである必要がある。
 
 ### 課金を有効化する
 
@@ -194,28 +194,28 @@ JSON ファイルがダウンロードされるので、このファイルはど
 
 ```
 gcloud sql instances create tutorial-sql-instance \
-    --activation-policy=ALWAYS \
-    --tier=db-n1-standard-1
+--activation-policy=ALWAYS \
+--tier=db-n1-standard-1
 ```
 
-次に、このインスタンスの MySQL root パスワードを以下のコマンドで設定しよう。この例ではパスワードに `xxxx` という文字列を使用しているが、安全なパスワードを使用することを強く推奨する。
+次に、このインスタンスの MySQL root パスワードを以下のコマンドで設定しよう。この例ではパスワードに `1111` という文字列を使用しているが、安全なパスワードを使用することを強く推奨する。
 
 ```
-$ gcloud sql users set-password root % --instance=tutorial-sql-instance --password=xxxx
+$ gcloud sql users set-password root % --instance=tutorial-sql-instance --password=1111
 ```
 
 最後に、Cloud SQL Proxy を利用して、ローカル環境から MySQL に接続するためのサーバーを起動しよう。
 
 ```
 cloud_sql_proxy \
-    -dir /tmp/cloudsql \
-    -instances=capitalp-wordpress:us-central1:tutorial-sql-instance=tcp:3306 \
-    -credential_file=/path/to/credential.json
+-dir /tmp/cloudsql \
+-instances=[YOUR_PROJECT_ID]:us-central1:tutorial-sql-instance=tcp:3306 \
+-credential_file=/path/to/credential.json
 ```
 
 このコマンドでは、以下の情報を利用しているので、必要に応じて置き換えること。
 
-* `capitalp-wordpress` - プロジェクト ID
+* `[YOUR_PROJECT_ID]` - プロジェクト ID
 * `tutorial-sql-instance` - MySQL のインスタンス名
 * `/path/to/credential.json` - サービスアカウントの認証情報用JSONファイルまでのパス
 
@@ -227,6 +227,70 @@ cloud_sql_proxy \
 $ mysql -h 127.0.0.1 -u root -p
 ```
 
+## GAE 用の WordPress 環境をローカルに作成
+
+### WordPress 用のデータベースを作成する
+
+以下のコマンドで、WordPress 用のデータベースを作成しよう。パスワードは、先ほど作成したパスワードに置き換えること。
+
+```
+$ echo 'create database tutorialdb;' | mysql -h 127.0.0.1 -u root --password=1111
+$ echo "create user 'tutorial-user'@'%' identified by '1111';" | mysql -h 127.0.0.1 -u root --password=1111
+$ echo "grant all on tutorialdb.* to 'tutorial-user'@'%';" | mysql -h 127.0.0.1 -u root --password=1111
+```
+
+### WordPress のセットアップ
+
+GAE 用の WordPress を構築するには、Google による WordPress プロジェクト用のテンプレートが GitHub で公開されているのでそれを利用する。
+
+```
+$ git clone https://github.com/GoogleCloudPlatform/php-docs-samples.git
+$ cd php-docs-samples/appengine/wordpress
+$ composer install
+```
+
+以上で、WordPress をセットアップするためのヘルパーコマンドがインストールされるので、それを利用して WordPress 環境を構築する。 `[YOUR_PROJECT_ID]` を実際の プロジェクト ID に置き換えること。
+
+```
+$ php wordpress-helper.php setup -n \
+-d ./wordpress-project \
+--db_region=us-central1 \
+--db_instance=tutorial-sql-instance \
+--db_name=tutorialdb \
+--db_user=tutorial-user \
+-p [YOUR_PROJECT_ID] \
+--db_password=1111
+```
+
+以上で WordPress の準備が完了したので WP-CLI コマンドを利用してローカルで WordPress を動かしてみよう。
+
+まず、以下のコマンドを実行して WP-CLI の設定ファイルを作成して WordPress のドキュメントルートを指定する。
+
+```
+$ cd wordpress-project
+$ echo "path: wordpress" > wp-cli.yml
+```
+
+次に WordPress を動作させるためのサーバーを起動しよう。
+
+```
+$ wp server
+```
+
+ブラウザで、`http://localhost:8080` にアクセスして WordPress のインストーラーが表示されていれば成功である。 インストールを完了させておこう。
+
+![](https://www.evernote.com/l/ABUfoesBDoxNmor44A4unJYvSQ4qRqZT2MgB/image.png)
+
 ## Google App Engine へのデプロイ
 
-## Advanced Tips
+GAE に WordPress をデプロイするには、以下のコマンドを実行するだけでよい。 デプロイには約5分ほどかかるようだ。
+
+```
+$ gcloud app deploy
+```
+
+デプロイが完了したら、以下のコマンドを実行すればブラウザで開くことができる。
+
+```
+$ gloud app browse
+```
