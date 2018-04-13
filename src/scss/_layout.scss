@@ -1,0 +1,22 @@
+html{
+  margin: 0;
+  padding: 0;
+}
+
+body{
+  margin: 0;
+  padding: 20mm;
+}
+
+.container{
+  page-break-before: always;
+  &:first-child{
+    page-break-before: avoid;
+  }
+}
+
+img{
+  max-width: 100%;
+  width: auto;
+  height: auto;
+}

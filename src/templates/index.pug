@@ -1,0 +1,16 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    title= 'GCPで始める'
+    link(rel='stylesheet' href='./css/print.css')
+  body
+    .container
+      h1.toc-title= '目次'
+      nav
+        ul.toc-list
+          each link in toc
+            li.toc-item=link.title
+    each content in contents
+      section.story-content(id=content.id)
+        .container!=content.html

@@ -1,4 +1,4 @@
-# 第1章: Capital PのAWS構成
+# 1章: Capital PのAWS構成
 
 さて、GCPに移行するより先に、現在のCapital Pがどんな構成のWebサイトとなっているのかを説明しよう。Capital PのURLは`https://capitalp.jp`である。ホスティングにはAWSを利用しており、以下のサービスが動いている。
 
@@ -8,9 +8,9 @@ Webサーバとして動作している。プランは`t2.micro`と控えめ。�
 
 ### RDS
 
-データベースはRDSを利用している。プランは`db.t2.micro`で、もちろん[Aurora]()による冗長化はしていないのだが、月額1,500〜2,000円程度とややお高め。
+データベースはRDSを利用している。プランは`db.t2.micro`で、もちろん[Aurora](https://aws.amazon.com/jp/rds/aurora/)による冗長化はしていないのだが、月額1,500〜2,000円程度とややお高め。
 
-### ElasticCache
+### ElastiCache
 
 WordPressに存在するオブジェクトキャッシュ機構を利用するため、[ElastiCache](https://aws.amazon.com/jp/elasticache/)を利用している。Capital Pのためだけに使っているわけではないのだが、こちらも2,000円弱とややお高め。
 

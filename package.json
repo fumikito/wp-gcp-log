@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "gulp server",
     "build": "gulp build",
-    "gulp": "gulp"
+    "gulp": "gulp",
+    "print": "electron-pdf ./html/manuscripts/00_toc.html out/wp-gcp-log.pdf"
   },
   "repository": {
     "type": "git",
