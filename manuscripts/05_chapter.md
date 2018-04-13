@@ -243,6 +243,8 @@ $ cloud_sql_proxy \
 $ mysql -h 127.0.0.1 -u root -p
 ```
 
+この Cloud SQL Proxy は、後述する `wp server` でローカルで WordPress を動作させる際に必要なものなので、別ウインドウで起動させておくとよい。
+
 ## GAE 用の WordPress 環境をローカルに作成
 
 ### WordPress 用のデータベースを作成する
@@ -343,10 +345,10 @@ $ wp plugin activate gcs
 
 このプラグインは GAE 上でメディアをアップロードできるようにするために必要なのでかならず有効化しておくこと。
 
-もし、Contact Form 7 をインストールし有効化するなら以下のようなコマンドを実行する。
+もし、Contact Form 7 をインストールするなら以下のようなコマンドを実行する。
 
 ```
-$ wp plugin install contact-form-7 --activate
+$ wp plugin install contact-form-7
 ```
 
 上のコマンドで使用した `contact-form-7` という文字列は、スラッグと呼ばれるものであり、WordPress の公式プラグインリポジトリ上の URL に使用されている文字列である。
@@ -356,13 +358,15 @@ https://wordpress.org/plugins/contact-form-7/
 このスラッグには以下のように .zip ファイルまでの URL を使用することもできる。
 
 ```
-$ wp plugin install https://downloads.wordpress.org/plugin/contact-form-7.5.0.1.zip --activate
+$ wp plugin install https://downloads.wordpress.org/plugin/contact-form-7.5.0.1.zip
 ```
 
-インストール済みのプラグインを確認するには以下のコマンドを入力する。
+この時点でインストールしたプラグインはあくまでもローカルにだけ存在しているものであるが、WordPress では有効化されたプラグインの情報をデータベースに保存しており、ローカルでインストールしたプラグインを実際に有効化する際には、その前にかならず後述する方法でデプロイする必要がある。
+
+デプロイが終わった後は WordPress の管理画面で有効化するか、以下のように WP-CLI コマンドを利用してローカルから有効化することも可能である。
 
 ```
-$ wp plugin list
+$ wp plugin activate contact-form-7
 ```
 
 その他のコマンドについては、WP-CLI のドキュメンテーションや `wp help` を確認していただきたい。
