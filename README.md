@@ -37,10 +37,33 @@ wp-gcp-log
 
 ## コンパイル
 
-マークダウンなのでそのままでも出力できますが、HTMLを出力するコマンドがいくつかあります。
+マークダウンなのでそのままでも出力できますが、HTMLや出版物を出力するコマンドがいくつかあります。
+
+### HTMLへのビルド
+
+```
+# npmでライブラリをインストール
+npm install
+# HTMLを出力
+npm build
+# BrowserSyncで表示する
+npm start
+```
+
+上記のコマンドを入力し、[localhost:3000/manuscripts/00_toc.html](https://localhost:3000/manuscripts/00_toc.html)へアクセスすると、目次が表示されます。
+
+### PDFへのビルド
+
+W.I.P
+
+### ePubへのビルド
 
 W.I.P
 
 ## ライセンス
 
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png" /></a><br />この 作品 は <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際 ライセンス</a>の下に提供されています。
+ソースコードはMITライセンスです。
+
+`manuscripts`ディレクトリおよび`images`ディレクトリのすべてのコンテンツは<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際 ライセンス</a>の下に提供されています。
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png" /></a>
