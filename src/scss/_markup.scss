@@ -1,0 +1,103 @@
+$pre-bg: #eee;
+$pre-color: #000;
+
+
+.story-content {
+  h1, h2, h3, h4, h5 {
+    margin: 2em 0 1em;
+    font-family: $sans;
+    font-weight: normal;
+  }
+  h1 {
+    font-size: 2em;
+  }
+  h2 {
+    border-bottom: 1px dashed #ddd;
+    padding-bottom: 1em;
+  }
+  h3 {
+    font-size: 1.5em;
+    border-left: 3mm solid #eee;
+    padding-left: 3mm;
+  }
+  h4{
+    font-weight: bold;
+    font-size: $body-size;
+  }
+
+  p{
+    line-height: 1.8;
+    text-align: justify;
+    text-justify: inter-ideograph;
+  }
+
+  ul, dl, ol{
+    font-family: $sans;
+  }
+  li{
+    margin: 0.25em 0;
+  }
+  a{
+    font-family: $sans;
+    &:after{
+      content: "(" attr(href) ")";
+      font-family: $monospace;
+      word-break: break-all;
+    }
+    &:link, &:visited{
+      color: #000;
+      text-decoration: none;
+    }
+    &:hover, &:active{
+      text-decoration: none;
+      color: #000;
+      font-weight: bold;
+    }
+  }
+}
+
+pre, code {
+  background: $pre-bg;
+  color: $pre-color;
+  font-family: $monospace;
+}
+
+pre {
+  margin: 1em 0;
+  padding: 1em;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+code {
+  padding: 0.2em 0.25em;
+}
+
+table {
+  margin: 1em 0;
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+  font-family: $sans;
+  th, td {
+    border: 1px solid #ddd;
+    padding: 1em;
+  }
+  thead th {
+    border-bottom: 3px double #ddd;
+  }
+  tbody tr:nth-child(odd) {
+    th, td {
+      background-color: #f9f9f9;
+    }
+  }
+}
+
+figure {
+  text-align: center;
+}
+
+figcaption {
+  color: #888;
+  font-family: $sans;
+}

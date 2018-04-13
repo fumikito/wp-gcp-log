@@ -27,43 +27,43 @@ gulp.task('sass', function () {
 
 // Pug task
 gulp.task('pug', function(){
-	var compiler = pug.compileFile('src/templates/template.pug');
+	var compiler = pug.compileFile('src/templates/index.pug');
 	var md = new MarkdonwIt();
 	mkdirp.sync('html/manuscripts');
 	fs.readdir('./manuscripts', function(err, files){
 		var tocs = [];
+		var contents = [];
 		// Compile all html.
 		files.filter(function(file){
 			return /^\d{2}_(.*)\.md$/.test(file);
 		}).map(function(file){
-			var dest = file.replace('.md', '.html');
+			var id = file.replace('.md', '');
+			// Create HTML
 			var content = fs.readFileSync('manuscripts/' + file).toString();
 			var title   = content.match(/^# (.*)$/m);
-			var html = compiler({
-				title: title[1],
-				content: md.render(content)
+			content = content.replace('../images', './images');
+			content = '<section class="" id="' + id + '">' + md.render(content) + '</section>';
+			content = content.replace(/<img([^>]*)alt="(.*?)"([^>]*)>/m, '<figure><img$1$3><figcaption>$2</figcaption></figure>');
+			contents.push({
+				id: id,
+				html: content
 			});
+			
 			tocs.push({
 				title: title[1],
-				href: dest
-			})
-			fs.writeFile('html/manuscripts/' + dest, html, function(err){
-				if(err){
-					throw err;
-				}
-				console.log(file + " is saved.");
 			});
+			console.log(id + ' rendered.');
 		});
-		// Save toc.
-		var tocCompiler = pug.compileFile('src/templates/toc.pug');
-		var tocHtml  = tocCompiler({
-			toc: tocs
+		// Save html
+		var html  = compiler({
+			toc: tocs,
+			contents: contents
 		});
-		fs.writeFile('html/manuscripts/00_toc.html', tocHtml, function(err){
+		fs.writeFile('html/index.html', html, function(err){
 			if(err){
 				throw err;
 			}
-			console.log("TOC is generated.");
+			console.log("HTML is generated.");
 		});
 	});
 });
@@ -84,7 +84,8 @@ gulp.task('sync', function(){
 	 browserSync.init({
         files: ["html/**/*"],
         server: {
-            baseDir: "./html"
+            baseDir: "./html",
+            index: "index.html"
         }
     });
 });
