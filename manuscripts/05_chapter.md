@@ -252,9 +252,9 @@ $ mysql -h 127.0.0.1 -u root -p
 以下のコマンドで、WordPress 用のデータベースを作成しよう。`[YOUR_MYSQL_ROOT_PASSWORD]` には先ほど設定した MySQL の root パスワードを、`[YOUR_WP_DB_PASSWORD]` には、WordPress 用データベースのパスワードを指定しよう。
 
 ```
-$ echo 'create database tutorialdb;' | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
-$ echo "create user 'tutorial-user'@'%' identified by '[YOUR_WP_DB_PASSWORD]';" | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
-$ echo "grant all on tutorialdb.* to 'tutorial-user'@'%';" | mysql -h 127.0.0.1 -u root --password=[YOUR_MYSQL_ROOT_PASSWORD]
+$ echo 'create database tutorialdb;' | mysql -h 127.0.0.1 -u root -p
+$ echo "create user 'tutorial-user'@'%' identified by '[YOUR_WP_DB_PASSWORD]';" | mysql -h 127.0.0.1 -u root -p
+$ echo "grant all on tutorialdb.* to 'tutorial-user'@'%';" | mysql -h 127.0.0.1 -u root -p
 ```
 
 ここで作成したデータベースのデータベース名、ユーザー名は以下の通りである。
@@ -405,41 +405,3 @@ Please enter your numeric choice:  9
 ```
 $ gloud app browse
 ```
-
-## メディアのアップロード
-
-WordPress の投稿画面からメディアのアップロードを可能にするためには、Cloud Storage を設定する必要がある。
-
-まず、先に述べた Google Cloud Storage plugin が有効化されていることを確認する。
-
-```
-$ wp plugin status gcs
-Plugin gcs details:
-    Name: Google Cloud Storage plugin
-    Status: Active
-    Version: 0.1.2 (Update available)
-    Author: Google Inc
-    Description: A plugin for uploading media files to Google Cloud Storage
-```
-
-次に、Google Cloud Storage plugin の管理画面でメディアをアップロードするためのバケット名を指定する。
-
-![](https://www.evernote.com/l/ABVb-Wq7Q5hMyIoQsUmtdRzxynxfcRK3kYcB/image.png)
-
-バケットは、すでに作成されているはずなので、以下のコマンドを実行して WordPress と同じ URL のバケットを指定する。
-
-```
-$ gsutil ls
-gs://staging.[YOUR_PROJECT_ID].appspot.com/
-gs://[YOUR_PROJECT_ID].appspot.com/
-```
-
-上の例では、`[YOUR_PROJECT_ID].appspot.com` がバケット名である。
-
-次に、このバケットに対して外部からの閲覧を許可する。
-
-```
-$ gsutil iam ch allUsers:objectViewer gs://[YOUR_PROJECT_ID].appspot.com/
-```
-
-以上で、メディアのアップロードが可能になったはずなので WordPress から写真などをアップロードしてみよう。
