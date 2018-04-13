@@ -6,6 +6,14 @@ GAE で WordPress を動かす方法は、公式なドキュメントでチュ�
 
 本書では、本書執筆時点（2018年4月）での最新の SDK をベースに解説する。
 
+* Google App Engine とは
+* Google App Engine で WordPress を利用するメリット
+* ローカル環境の準備
+* Google App Engine の準備
+* GAE 用の WordPress 環境をローカルに作成
+* GAE へのデプロイ
+* メディアのアップロード
+
 ## Google App Engine とは
 
 Google App Engine とは、Google Cloud Platform によって提供されるサービスの一つであり、PaaS (Platform As A Service) の一つである。
@@ -31,6 +39,9 @@ GAE 上に WordPress をインストールするには、少なくとも以下�
 * Google Cloud SDK
 * PHP
 * MySQL クライアント + Cloud SQL Proxy
+
+また、以下は必須ではないが、あったほうが便利なのでインストールしておく。
+
 * WP-CLI
 
 今回は、macOS でのセットアップ方法を解説していく。 Homebrew を使用するのであらかじめインストールしておくこと。
@@ -305,7 +316,58 @@ $ wp server
 
 ![](https://www.evernote.com/l/ABUfoesBDoxNmor44A4unJYvSQ4qRqZT2MgB/image.png)
 
-## Google App Engine へのデプロイ
+### WordPress 本体、プラグイン、テーマ、言語ファイルのアップデート
+
+WordPress を安全に利用するには常に最新の状態に保っておく必要がある。
+
+GAE 上では、直接ブラウザからアップデートを行うことができないため、上述した `wp server` 環境下でアップデートを行うか WP-CLI を使用してアップデートしよう。
+
+```
+$ wp core update
+$ wp plugin update --all
+$ wp theme update --all
+$ wp core language update
+```
+
+### Google Cloud Storage plugin の有効化
+
+GAE では、WordPress プラグインを管理画面からアップロードすることができないため、ローカルでインストールする必要がある。一見煩雑に感じるかもしれないが、ウェブブラウザから PHP ファイルをアップロードされるリスクがないことは安全上好ましいことであり、WP-CLI を使用すればローカルでプラグインをインストールし有効化することができる。
+
+上述した `php wordpress-helper.php` を使用すれば Google Cloud Storage plugin というプラグインがインストールされるのでまずこれを有効化しよう。
+
+以下のコマンドは `wordpress-project/` 以下で実行する必要があることに注意すること。
+
+```
+$ wp plugin activate gcs
+```
+
+このプラグインは GAE 上でメディアをアップロードできるようにするために必要なのでかならず有効化しておくこと。
+
+もし、Contact Form 7 をインストールし有効化するなら以下のようなコマンドを実行する。
+
+```
+$ wp plugin install contact-form-7 --activate
+```
+
+上のコマンドで使用した `contact-form-7` という文字列は、スラッグと呼ばれるものであり、WordPress の公式プラグインリポジトリ上の URL に使用されている文字列である。
+
+https://wordpress.org/plugins/contact-form-7/
+
+このスラッグには以下のように .zip ファイルまでの URL を使用することもできる。
+
+```
+$ wp plugin install https://downloads.wordpress.org/plugin/contact-form-7.5.0.1.zip --activate
+```
+
+インストール済みのプラグインを確認するには以下のコマンドを入力する。
+
+```
+$ wp plugin list
+```
+
+その他のコマンドについては、WP-CLI のドキュメンテーションや `wp help` を確認していただきたい。
+
+## GAE へのデプロイ
 
 GAE に WordPress をデプロイするには、以下のコマンドを実行するだけでよい。 デプロイには約5分ほどかかるようだ。
 
@@ -339,3 +401,41 @@ Please enter your numeric choice:  9
 ```
 $ gloud app browse
 ```
+
+## メディアのアップロード
+
+WordPress の投稿画面からメディアのアップロードを可能にするためには、Cloud Storage を設定する必要がある。
+
+まず、先に述べた Google Cloud Storage plugin が有効化されていることを確認する。
+
+```
+$ wp plugin status gcs
+Plugin gcs details:
+    Name: Google Cloud Storage plugin
+    Status: Active
+    Version: 0.1.2 (Update available)
+    Author: Google Inc
+    Description: A plugin for uploading media files to Google Cloud Storage
+```
+
+次に、Google Cloud Storage plugin の管理画面でメディアをアップロードするためのバケット名を指定する。
+
+![](https://www.evernote.com/l/ABVb-Wq7Q5hMyIoQsUmtdRzxynxfcRK3kYcB/image.png)
+
+バケットは、すでに作成されているはずなので、以下のコマンドを実行して WordPress と同じ URL のバケットを指定する。
+
+```
+$ gsutil ls
+gs://staging.[YOUR_PROJECT_ID].appspot.com/
+gs://[YOUR_PROJECT_ID].appspot.com/
+```
+
+上の例では、`[YOUR_PROJECT_ID].appspot.com` がバケット名である。
+
+次に、このバケットに対して外部からの閲覧を許可する。
+
+```
+$ gsutil iam ch allUsers:objectViewer gs://[YOUR_PROJECT_ID].appspot.com/
+```
+
+以上で、メディアのアップロードが可能になったはずなので WordPress から写真などをアップロードしてみよう。
