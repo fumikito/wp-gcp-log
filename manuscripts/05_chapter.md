@@ -391,3 +391,95 @@ Please enter your numeric choice:  9
 ```
 $ gloud app browse
 ```
+
+## メディアのアップロード
+
+WordPress の投稿画面からメディアのアップロードを可能にするためには、Cloud Storage を設定する必要がある。
+
+まず、先に述べた Google Cloud Storage plugin が有効化されていることを確認する。
+
+```
+$ wp plugin status gcs
+Plugin gcs details:
+    Name: Google Cloud Storage plugin
+    Status: Active
+    Version: 0.1.2 (Update available)
+    Author: Google Inc
+    Description: A plugin for uploading media files to Google Cloud Storage
+```
+
+次に、Google Cloud Storage plugin の管理画面でメディアをアップロードするためのバケット名を指定する。
+
+![](https://www.evernote.com/l/ABVb-Wq7Q5hMyIoQsUmtdRzxynxfcRK3kYcB/image.png)
+
+バケットは以下のコマンドで新規に作成することができる。
+
+```
+$ gsutil mb gs://[You_Bucket_Name]
+```
+
+`[You_Bucket_Name]` は任意のバケット名で、GCP 全体でユニークな名前である必要があるので注意しよう。もしすでに存在しているバケット名を指定すると以下のようなエラーが出る。
+
+```
+$ gsutil mb gs://wordpress
+Creating gs://wordpress/...
+ServiceException: 409 Bucket wordpress already exists.
+```
+
+次にこのバケットに対するウェブ経由での閲覧を許可しよう。
+
+```
+$ gsutil iam ch allUsers:objectViewer gs://[You_Bucket_Name]
+```
+
+以上で Cloud Storage の準備が完了したので WordPress に移動して、さきほどの Google Cloud Storage plugin の管理画面でこのバケット名を入力しよう。
+
+最後に念のためメディアをアップロードして動作確認しておくことをおすすめする。
+
+![](https://www.evernote.com/l/ABX9Jj_4HzdCFaHxDLLAQ-5gavpmdip1CosB/image.png)
+
+## GAE の感想
+
+まずパフォーマンスについてあるが、100 クライアントから 10,000 アクセスというそこそこハードな条件でベンチマークを行ったところ、一つもエラーがでかったことは特筆すべきであり、高トラフィックなサイトでインフラの運用コストを抑えたい場合には大きく貢献してくれるであろう。
+
+```
+$ h2load -c 100 -n 10000 https://wp-miya.appspot.com/
+starting benchmark...
+spawning thread #0: 100 total client(s). 10000 total requests
+TLS Protocol: TLSv1.2
+Cipher: ECDHE-RSA-AES128-GCM-SHA256
+Server Temp Key: ECDH P-256 256 bits
+Application protocol: h2
+progress: 10% done
+progress: 20% done
+progress: 30% done
+progress: 40% done
+progress: 50% done
+progress: 60% done
+progress: 70% done
+progress: 80% done
+progress: 90% done
+progress: 100% done
+
+finished in 193.36s, 51.72 req/s, 2.64MB/s
+requests: 10000 total, 10000 started, 10000 done, 10000 succeeded, 0 failed, 0 errored, 0 timeout
+status codes: 10000 2xx, 0 3xx, 0 4xx, 0 5xx
+traffic: 511.02MB (535847211) total, 371.78KB (380700) headers (space savings 89.18%), 509.55MB (534300000) data
+                     min         max         mean         sd        +/- sd
+time for request:   372.36ms       6.23s       1.86s    996.61ms    60.19%
+time for connect:   429.52ms    473.09ms    458.45ms      8.94ms    64.00%
+time to 1st byte:   992.89ms       4.18s       2.73s    770.73ms    62.00%
+req/s           :       0.52        0.58        0.54        0.01    68.00%
+```
+
+一方で体感速度はやや遅く感じた。リージョンに東京を選択したのでレイテンシーはそれほどないはずなので、もしかしたら工夫次第で改善の余地があるかもしれない。
+
+ただし、Google が提供するモバイルスピードの診断ツールでは良い結果がでたので、デフォルトのままでも問題になるほど遅いわけではない。
+
+![](https://www.evernote.com/l/ABW1S5G3-U1Id67SvtX64aFr6ndpjzc29hIB/image.png)
+
+前の章でも述べられているが、メールについてはいろいろノウハウの蓄積が必要かもしれないと思った。GAE では PHP の `mail()` が利用できないので何らかの外部サービスとの連携が必須である。
+
+今回、この章では可能な限りコマンドラインツールを使用して WordPress を構築していった。一度プロジェクトを作成してしまうとほぼすべての操作がコマンドラインから可能であり、これは Git と CI を組み合わせたデプロイの自動化で大きな威力を発揮してくれると思う。
+
+また、Cloud SQL Proxy というローカル環境から GCP 上の MySQL へ接続するためのツールのおかげで、WP-CLI との相性がとてもよかった。特別な動機作業を行うことなく `wp server` 本番とほぼ同じ状態のローカル開発環境が起動するのは素晴らしいと思う。ただしうっかり本番環境の DB を書き換えてしまうリスクもあり、そこは注意スべきことかもしれない。
