@@ -285,20 +285,6 @@ $ php wordpress-helper.php setup -n \
 --db_password=[YOUR_WP_DB_PASSWORD]
 ```
 
-さて、本書執筆時点では上の `wordpress-helper.php` にバグがあり、データベースのリージョンが正しく反映されない。したがって以下の例のように `asia-northeast1` という文字列を挿入して正しいリージョンを設定する必要がある。
-
-`wordpress-project/app.yaml` (5行目):
-
-```
-cloud_sql_instances: [YOUR_PROJECT_ID]:asia-northeast1:tutorial-sql-instance
-```
-
-`wordpress-project/wordpress/wp-config.php` (49行目):
-
-```
-define('DB_HOST', ':/cloudsql/[YOUR_PROJECT_ID]:asia-northeast1:tutorial-sql-instance');
-```
-
 WordPress の準備が完了したので WP-CLI コマンドを利用してローカルで WordPress を動かしてみよう。WP-CLI には `wp server` という PHP のビルトインコマンドを利用したサーバーを起動するためのコマンドがあるので、それを利用すればローカル環境にウェブサーバーがインストールされている必要はない。
 
 まず、以下のコマンドを実行して WP-CLI の設定ファイルを作成して WordPress のドキュメントルートを指定する。
