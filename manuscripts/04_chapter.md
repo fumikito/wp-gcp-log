@@ -346,7 +346,7 @@ GCPでMySQLを利用するには、Cloud SQLインスタンスを作成する必
 
 はて、WordPressはどうやったらこのMySQLサーバーに接続することができるのだろうか？　AWSでは[VPC](https://aws.amazon.com/jp/vpc/)という概念があり、EC2インスタンス（Webサーバー）とRDS（データベース）を同じVPCネットワークグループに放り込んでおけば、`capitalp.cbmqedvmcaxv.ap-northeast-1.rds.amazonaws.com`のようなURLで接続することができた。VPC外部からの接続はシャットダウンしているので、パスワードが漏れても安心だ。
 
-GCPの場合は[いくつかの接続方法](https://cloud.google.com/sql/docs/mysql/external-connection-methods?hl=ja&_ga=2.84237466.-2058163744.1511782493)があるようだが、どれもそれなりに複雑なようで、一番推奨されているのが[Cloud SQL Proxy](https://cloud.google.com/sql/docs/mysql/connect-compute-engine?hl=ja#gce-connect-proxy)という手法での接続のようである。
+GCPの場合は[いくつかの接続方法](https://cloud.google.com/sql/docs/mysql/external-connection-methods?hl=ja)があるようだが、どれもそれなりに複雑なようで、一番推奨されているのが[Cloud SQL Proxy](https://cloud.google.com/sql/docs/mysql/connect-compute-engine?hl=ja#gce-connect-proxy)という手法での接続のようである。
 
 ![他の方法での接続はほとんど推奨されていない。](../images/04_15_recommeded_connection.png)
 
