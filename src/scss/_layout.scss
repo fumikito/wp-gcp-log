@@ -5,18 +5,18 @@ html{
 
 body{
   margin: 0;
-  padding: 20mm;
 }
 
 .container{
-  page-break-before: always;
-  &:first-child{
+  padding: 0 1em;
+  @media only screen {
+    padding: 20mm;
+  }
+  &-toc{
     page-break-before: avoid;
   }
 }
 
-img{
-  max-width: 100%;
-  width: auto;
-  height: auto;
+section{
+  page-break-before: always;
 }

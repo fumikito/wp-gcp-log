@@ -1,6 +1,7 @@
 $pre-bg: #eee;
 $pre-color: #000;
-
+$link-color: #000;
+$link-href-color: #aaa;
 
 .story-content {
   h1, h2, h3, h4, h5 {
@@ -27,33 +28,105 @@ $pre-color: #000;
 
   p{
     line-height: 1.8;
+    margin: 0;
     text-align: justify;
     text-justify: inter-ideograph;
+    text-indent: 1em;
   }
 
   ul, dl, ol{
     font-family: $sans;
+    margin: 1em 0;
+  }
+  ul,ol{
+    padding-left: 1.5em;
   }
   li{
     margin: 0.25em 0;
   }
+  ul li{
+    list-style: square;
+  }
+  dt{
+    font-weight: bold;
+    margin: 0.5em 0 0.25em;
+  }
+  dl{
+    page-break-inside: avoid;
+    padding: 1em;
+    border: 0.5mm solid #000;
+  }
+  dd{
+    margin: 0.25em 0 0.5em;
+  }
+
+  blockquote{
+    position: relative;
+    margin: 1em 0;
+    padding: 1em;
+    font-size: 1.1em;
+    color: #000;
+    font-family: $sans;
+    &:before,&:after{
+      font-size: 4em;
+      position: absolute;
+      color: #ccc;
+    }
+    &:before{
+      content: "“";
+      top: 0;
+      left: 0;
+    }
+    &:after{
+      content: "”";
+      bottom: -0.5em;
+      right: 0;
+
+    }
+  }
+
   a{
     font-family: $sans;
     &:after{
-      content: "(" attr(href) ")";
+      margin-left: 1mm;
+      margin-right: 1mm;
+      content: "<" attr(href) ">";
       font-family: $monospace;
       word-break: break-all;
+      color: $link-href-color;
     }
     &:link, &:visited{
-      color: #000;
+      color: $link-color;
       text-decoration: none;
     }
     &:hover, &:active{
-      text-decoration: none;
-      color: #000;
-      font-weight: bold;
+      text-decoration: underline;
+      color: $link-color
     }
   }
+
+
+
+  table {
+    margin: 1em 0;
+    width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
+    font-family: $sans;
+    th, td {
+      border: 1px solid #ddd;
+      padding: 1em;
+    }
+    thead th {
+      border-bottom: 3px double #ddd;
+    }
+    tbody tr:nth-child(odd) {
+      th, td {
+        background-color: #f9f9f9;
+      }
+    }
+  }
+
 }
 
 pre, code {
@@ -73,31 +146,40 @@ code {
   padding: 0.2em 0.25em;
 }
 
-table {
-  margin: 1em 0;
-  width: 100%;
-  table-layout: auto;
-  border-collapse: collapse;
-  font-family: $sans;
-  th, td {
-    border: 1px solid #ddd;
-    padding: 1em;
-  }
-  thead th {
-    border-bottom: 3px double #ddd;
-  }
-  tbody tr:nth-child(odd) {
-    th, td {
-      background-color: #f9f9f9;
-    }
-  }
-}
 
+
+img{
+  -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+  filter: grayscale(100%);
+  max-width: 100%;
+  width: auto;
+  height: auto;
+}
 figure {
   text-align: center;
+  padding: 1em;
+  margin: 1em 0;
+  background: #f9f9f9;
+  img{
+    max-width: 90%;
+    page-break-inside: auto;
+  }
 }
 
 figcaption {
   color: #888;
+  font-size: 9pt;
+  margin-top: 5mm;
   font-family: $sans;
+}
+
+hr{
+  display: block;
+  border: none;
+  text-align: center;
+  &:after{
+    content: "＊";
+    color: $link-href-color;
+    margin: 1em 0;
+  }
 }

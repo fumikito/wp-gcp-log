@@ -1,12 +1,11 @@
 $monospace: Consolas, Osaka, monospace;
 $sans: Helvetica, "Hiragino Kaku Gothic ProN", sans-serif;
 $serif: Georgia, YuGothic, serif;
-$body-size: 10.5pt;
-
+$body-size: 10pt;
+$body-color: #444;
 
 body{
-	color: #444;
+	color: $body-color;
 	font-family: $serif;
 	font-size: $body-size;
 }
-

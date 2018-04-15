@@ -1,0 +1,59 @@
+.container-toc {
+  font-family: $sans;
+}
+
+.titlepage {
+
+  &-title{
+
+  }
+
+  &-string{
+    display: block;
+  }
+
+  &-tagline{
+    color: #aaa;
+    font-size: 0.8em;
+    display: block;
+  }
+
+  &-author{
+    font-size: 11pt;
+  }
+
+  &-img {
+    display: block;
+    margin: 0 auto;
+    max-width: 80mm;
+    width: auto;
+    height: auto;
+    page-break-after: always;
+  }
+}
+
+.toc-title {
+  text-align: center;
+  padding-bottom: 1em;
+  border-bottom: 1mm double #eee;
+  margin-bottom: 1em;
+}
+
+.toc-list {
+  table-layout: auto;
+  width: 100%;
+  border-collapse: collapse;
+  th, td {
+    padding: 1em;
+    border-bottom: 0.25mm solid #ccc;
+  }
+  th {
+    text-align: left;
+    font-weight: normal;
+  }
+  td {
+    width: 3em;
+    text-align: right;
+  }
+}
+

@@ -1,16 +1,26 @@
+- var book_title = 'WordPressで始める  Google Cloud Platform本格入門';
 doctype html
 html
   head
     meta(charset='utf-8')
-    title= 'GCPで始める'
+    title=book_title
     link(rel='stylesheet' href='./css/print.css')
   body
-    .container
-      h1.toc-title= '目次'
+    .container.container-titlepage
+      h1.titlepage-title
+        span.titlepage-tagline WordPress on Google Cloud Platform
+        each line in book_title.split('  ')
+          span.titlepage-string=line
+      p.titlepage-author 高橋文樹・宮内隆行　共著
+      img.titlepage-img(src='./images/00_character.png' alt='Capital P GCP Girl')
+    .container.container-toc
+      h1.toc-title 目次
       nav
-        ul.toc-list
+        table.toc-list
           each link in toc
-            li.toc-item=link.title
+            tr.toc-row
+              th=link.title
+              td 00
     each content in contents
       section.story-content(id=content.id)
         .container!=content.html

@@ -21,10 +21,10 @@ WordPressをホスティングする際、いくつかの選択肢がある。�
 
 ## 本書の構成
 
-1. Capital P 現在のAWS構成
+1. Capital PのAWS構成
 2. GCPアプリケーションの紹介
-3. Google Compute Engineによるシングル WordPress
-4. Google App Engineによるエラスティック WordPress
+3. Google Compute EngineによるシングルWordPress
+4. Google App Engine による WordPress サイトの運営
 5. Google Kubernetes Engineによる大規模編成
 
 ## 免責事項
