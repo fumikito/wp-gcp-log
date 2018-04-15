@@ -38,6 +38,7 @@
     "imagemin-pngquant": "^5.1.0",
     "jstransformer-markdown-it": "^2.0.0",
     "markdown-it": "^8.4.1",
+    "markdown-it-deflist": "^2.0.3",
     "mkdirp": "^0.5.1",
     "node-sass": "^4.8.3",
     "pug": "^2.0.3"

@@ -29,6 +29,8 @@ gulp.task('sass', function () {
 gulp.task('pug', function(){
 	var compiler = pug.compileFile('src/templates/index.pug');
 	var md = new MarkdonwIt();
+	var dl = require('markdown-it-deflist');
+	md = md.use(dl);
 	mkdirp.sync('html/manuscripts');
 	fs.readdir('./manuscripts', function(err, files){
 		var tocs = [];
@@ -42,15 +44,15 @@ gulp.task('pug', function(){
 			var content = fs.readFileSync('manuscripts/' + file).toString();
 			var title   = content.match(/^# (.*)$/m);
 			content = content.replace('../images', './images');
-			content = '<section class="" id="' + id + '">' + md.render(content) + '</section>';
-			content = content.replace(/<img([^>]*)alt="(.*?)"([^>]*)>/m, '<figure><img$1$3><figcaption>$2</figcaption></figure>');
+			content = md.render(content);
+			content = content.replace(/<p><img([^>]*)alt="(.*?)"([^>]*)><\/p>/mg, '<figure><img$1$3><figcaption>$2</figcaption></figure>');
 			contents.push({
 				id: id,
 				html: content
 			});
 			
 			tocs.push({
-				title: title[1],
+				title: title[1]
 			});
 			console.log(id + ' rendered.');
 		});
@@ -92,15 +94,15 @@ gulp.task('sync', function(){
 
 gulp.task('reload', function(){
 	browserSync.reload();
-    done();
 });
 
 // watch
 gulp.task('watch', function () {
   // Make SASS
   gulp.watch(['src/scss/**/*.scss'], ['sass']);
-  // JS
+  // HTML
   gulp.watch('manuscripts/**/*.md', ['pug']);
+  gulp.watch('src/templates/**/*.pug', ['pug']);
   // Minify Image
   gulp.watch('images/**/*', ['imagemin']);
   // Sync browser sync.
