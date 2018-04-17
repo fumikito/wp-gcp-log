@@ -216,13 +216,33 @@ GCPに限らずクラウドホスティングを利用する場合、スケー�
 
 これに対するソリューションとして、AWSでは長らく[ElasticFileSystem](https://aws.amazon.com/jp/efs)というサービスが予告されていたが、ベータ版の期間が長く、正式リリースされた現在（2018年3月）でもまだ東京リージョンは存在していない。したがって、筆者などはエンタープライズレベルの顧客に対してはNFSのバックアップサーバーを用意し、障害があった場合はそれを入れ替えるという構成にしていた。これはこれで**NFSのお守り**が必要となり、「せっかくクラウドを利用しているのに……」という虚しさを感じていたものだ。
 
-しかしながら、GCPの[永続ディスク](https://cloud.google.com/persistent-disk/?hl=ja)はこうしたNFS的な性質を標準装備しているらしい。耐障害性も永続ディスク単体で保証しているようで、AWSの[Elastic Block Store](https://aws.amazon.com/jp/ebs/)と異なり、一つのインスタンスにしか紐づけられないという制約はなさそうだ。ということは、WordPressディレクトリをこの永続ディスクに入れておき、なおかつそのディスクを複数のインスタンスで共有すれば、単一障害点なしでスケーラブルな構成を手に入れることができる。容量の追加もクラウド上で[簡単にできる](https://cloud.google.com/compute/docs/disks/add-persistent-disk?hl=ja)らしい。
+さて、GCPの[永続ディスク](https://cloud.google.com/persistent-disk/?hl=ja)はこうしたNFS的な性質を標準装備しているかのうような印象を受ける。
 
 > 永続ディスクは独自のマルチリーダー機能を備えています。マルチリーダー機能を搭載することで、処理速度を低下させることなく、1 枚の永続ディスクのデータを複数の仮想マシンが同時に読み取ることができます。マルチリーダー機能により、コンテンツの共有がとても簡単になりました。
 
-ポイントとしては、VMインスタンスを立ち上げたときにおまけで付いてくる永続ディスクとは別のディスクを用意すること。VMにはブートディスク（OSが入ったディスク）が必要になるのだが、それとはあえて別のディスクを用意することで共有が簡単になる。料金はSSDでも1GB/1ヶ月で$0.221（2018年3月現在）と安いので、費用の心配をする必要はないだろう。
+AWSの[Elastic Block Store](https://aws.amazon.com/jp/ebs/)と異なり、一つのインスタンスにしか紐づけられないという制約はなさそうなのだが、[永続ディスクの追加またはサイズ変更](https://cloud.google.com/compute/docs/disks/add-persistent-disk#use_multi_instances)というドキュメントを詳細に読むと、同時接続できるのは読み取りモードに限定されるようだ。
 
-それでは、実際にやってみよう。まずは永続ディスクの作成から。コンソールで「Compute Engine > ディスク > ディスクを作成」をクリックする。
+> 永続ディスクを複数インスタンスに接続する場合、すべてのインスタンスが永続ディスクを読み取り専用モードで接続する必要があります。複数のインスタンスに読み取り/書き込みモードで永続ディスクを接続することはできません。
+
+WordPressディレクトリをこの永続ディスクに入れておき、なおかつそのディスクを複数のインスタンスで共有すれば、単一障害点なしでスケーラブルな構成を手に入れることができると思ったのだが、そうは問屋が卸さないようだ。公式ドキュメントでは以下の方法を示唆している。
+
+- [Cloud Storageに接続する](https://cloud.google.com/compute/docs/disks/gcs-buckets)
+- [NFSを構築する](https://cloud.google.com/solutions/filers-on-compute-engine)
+- [Single Node File Serverを構築する](https://cloud.google.com/solutions/filers-on-compute-engine#single-node-file-server)
+
+このうち、Cloud Storageに関しては、マウントした際のファイル読み書きがネットワーク越しになるので、実用に耐える速度が出ないと思われる。Cloud StorageはAWSにおけるS3に相当するサービスだが、以前筆者がS3をマウントするS3FSを利用してWordPress全体を共有してみたところ、堪え難いほど遅かった。
+
+Single Node File ServerはGoogle Cloud Launcherによって提供されるサードパーティーのサービスである。Cloud Launcherとは、要するにGCPの複数のサービスを組み合わせたものをワンクリックで構築できるテンプレートセットのようなものだ。これはこれで便利そうなのだが、コストが高そうなので今回は見送り。残された手段としては、NFSを自力で構築するしかなさそうだ。
+
+とはいえ、永続ディスクそれ自体の利便性はいくつか挙げられる。まず、容量の追加がクラウド上で[簡単にできる](https://cloud.google.com/compute/docs/disks/add-persistent-disk?hl=ja)うえに、ダウンタイムがないそうだ。つまり、10GBで運用をはじめ、画像ファイルが増えてきたらコンソールまたはコマンドラインで容量を追加して終わりだ。容量はなんと最大で64TBまで増加できる。画像が5,000万枚ぐらいになっても耐えられそうだ。耐障害性も永続ディスク単体で保証しており、ディスク自体の健全性について気にする必要はない。
+
+というわけで、残念ながら理想とする高可用性のファイルシステムを簡単に手に入れることはできなかったが、とりあえずファイルシステムとしては永続ディスクを利用することからはじめてみよう。
+
+## 永続ディスクのマウント
+
+それでは、実際にやってみよう。ポイントとしては、VMインスタンスを立ち上げたときにおまけで付いてくる永続ディスクとは別のディスクを用意すること。VMにはブートディスク（OSが入ったディスク）が必要になるのだが、それとはあえて別のディスクを用意することで、あとあと高可用性の環境を構築するのが簡単になる。料金はSSDでも1GB/1ヶ月で0.221ドル（2018年3月現在）と安いので、費用の心配をする必要はないだろう。
+
+まずは永続ディスクの作成から。コンソールで「Compute Engine > ディスク > ディスクを作成」をクリックする。
 
 ![新しいディスクを作成する。](../images/04_10_newdisk.png)
 
@@ -308,7 +328,7 @@ tar xzf wordpresss.tar.gz
 cp -r wordpress/* /var/www/wordpress
 ```
 
-これでファイルの準備を整った。あとはnginxの設定を変更するだけだ。デフォルトの設定だと、nginxのドキュメントルートは`/usr/share/nginx/html`だったが、これを`/var/www/wordpress`に変更しよう。
+これでファイルの準備をは整った。あとはnginxの設定を変更するだけだ。デフォルトの設定だと、nginxのドキュメントルートは`/usr/share/nginx/html`だったが、これを`/var/www/wordpress`に変更しよう。
 
 ```
 sudo vim /etc/nginx/nginx.conf
@@ -342,9 +362,7 @@ GCPでMySQLを利用するには、Cloud SQLインスタンスを作成する必
 
 ![設定パネルは隠れているのでクリックして展開しよう。](../images/04_14_mysql.png)
 
-設定が終わると、インスタンスの詳細を見ることができる。
-
-はて、WordPressはどうやったらこのMySQLサーバーに接続することができるのだろうか？　AWSでは[VPC](https://aws.amazon.com/jp/vpc/)という概念があり、EC2インスタンス（Webサーバー）とRDS（データベース）を同じVPCネットワークグループに放り込んでおけば、`capitalp.cbmqedvmcaxv.ap-northeast-1.rds.amazonaws.com`のようなURLで接続することができた。VPC外部からの接続はシャットダウンしているので、パスワードが漏れても安心だ。
+設定が終わると、インスタンスの一覧に画像が表示される。はて、WordPressはどうやったらこのMySQLサーバーに接続することができるのだろうか？　AWSでは[VPC](https://aws.amazon.com/jp/vpc/)という概念があり、EC2インスタンス（Webサーバー）とRDS（データベース）を同じVPCネットワークグループに放り込んでおけば、`capitalp.cbmqedvmcaxv.ap-northeast-1.rds.amazonaws.com`のようなURLで接続することができた。VPC外部からの接続はシャットダウンしているので、パスワードが漏れても安心だ。
 
 GCPの場合は[いくつかの接続方法](https://cloud.google.com/sql/docs/mysql/external-connection-methods?hl=ja)があるようだが、どれもそれなりに複雑なようで、一番推奨されているのが[Cloud SQL Proxy](https://cloud.google.com/sql/docs/mysql/connect-compute-engine?hl=ja#gce-connect-proxy)という手法での接続のようである。
 
@@ -474,7 +492,7 @@ Description = Cloud SQL Proxy Daemon
 After = network.target
 
 [Service]
-ExecStart = /usr/local/bin/cloud_sql_proxy -dir=/cloudsql -instances=analog-vault-9999999:asia-northeast1:sgdb1 -credential_file=/root/GQL-Connect.json
+ExecStart = /usr/local/bin/cloud_sql_proxy -dir=/cloudsql -instances=capitalp-182517:asia-northeast1:capitalp-db-master=tcp:3306 -credential_file=/cloudsql/capitalp-ce01.json
 ExecStop = /bin/kill ${MAINPID}
 ExecReload = /bin/kill -HUP ${MAINPID}
 Restart = always
