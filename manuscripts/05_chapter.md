@@ -1,5 +1,7 @@
 # 4章: Google App Engine による WordPress サイトの運営
 
+宮内隆行
+
 この章では、Google App Engine（以下 GAE） を利用して WordPress サイトを公開する方法について解説する。
 
 GAE で WordPress を動かす方法は、公式なドキュメントでチュートリアルが紹介されているが、このチュートリアルはバージョンが古い SDK をベースに解説されており、一部のコマンドが期待通りに動作しない。

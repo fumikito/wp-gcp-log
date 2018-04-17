@@ -11,6 +11,13 @@ $link-href-color: #aaa;
   }
   h1 {
     font-size: 2em;
+    & + p{
+      text-align: right;
+      font-size: 1.2em;
+      font-weight: bold;
+      font-family: $sans;
+      margin-bottom: 2em;
+    }
   }
   h2 {
     border-bottom: 1px dashed #ddd;
@@ -52,7 +59,7 @@ $link-href-color: #aaa;
     margin: 0.5em 0 0.25em;
   }
   dl{
-    page-break-inside: avoid;
+    page-break-before: always;
     padding: 1em;
     border: 0.5mm solid #000;
   }

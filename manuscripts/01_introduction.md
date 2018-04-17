@@ -1,5 +1,7 @@
 # はじめに
 
+高橋文樹
+
 本書は Google Inc. の提供するクラウド・サービスである Google Cloud Platform を WordPressから利用するにあたっての指南書兼実行記録である。
 
 ## 本書を書くに至った経緯

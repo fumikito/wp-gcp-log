@@ -1,5 +1,7 @@
 # 5章: Google Kubernetes Engineによる大規模編成
 
+高橋文樹
+
 本章ではKubernetesを利用した大規模編成について紹介する。大注目のクラウド技術であり、なおかつAWSから[GCPへの移行を決断した企業](https://capitalp.jp/2018/01/24/pantheon-moves-to-gcp/)の目当てがこのKubernetesだったりするので、ぜひともチェックしておきたいところだ。
 
 では、実際に作業に取りかかるまえに、そもそもKubenetesとはなんなのか、ということを知っておこう。

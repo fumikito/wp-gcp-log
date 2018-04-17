@@ -1,5 +1,7 @@
 # 3章: Google Compute EngineによるシングルWordPress
 
+高橋文樹
+
 それでは早速既存のCapital Pサイトを移行しよう。まずはプロジェクトを作成する。GCPのコンソール画面に入ったら、ロゴの横にあるProjectをクリックすると、プロジェクトを作成することができる。
 
 ![右上の+ボタンで新規プロジェクト](../images/04_01_new_project.png)

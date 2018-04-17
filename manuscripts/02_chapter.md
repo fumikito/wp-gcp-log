@@ -1,5 +1,7 @@
 # 1章: Capital PのAWS構成
 
+高橋文樹
+
 さて、GCPに移行するより先に、現在のCapital Pがどんな構成のWebサイトとなっているのかを説明しよう。Capital PのURLは`https://capitalp.jp`である。ホスティングにはAWSを利用しており、以下のサービスが動いている。
 
 ### EC2
