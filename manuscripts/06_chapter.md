@@ -329,21 +329,403 @@ IPアドレスが表示されているので、実際にアクセスしてみよ
 
 ![アクセス成功！](../images/06_06_stylesheet.png)
 
-実際に公開するとなると、第3章で行ったように、DNSを振り向ける必要がある。だが、GCPのロードバランサーが優れている点として、[エニーキャストIP](https://cloud.google.com/load-balancing/?hl=ja)という仕組みにより、単一のIPアドレスで終端できる点をあげられる。これはAWSのロードバランシングにはなかった利点で、ルートドメイン（`www.capitalp.jp`ではなく、`capitalp.jp`）のようにCNAMEを利用することができないドメインでも、特に意識することなくDNS設定を行うことができる。
+実際に公開するとなると、第3章で行ったように、DNSを振り向ける必要がある。GCPのロードバランサーが優れている点として、[エニーキャストIP](https://cloud.google.com/load-balancing/?hl=ja)という仕組みにより、単一のIPアドレスで終端できる点をあげられる。これはAWSのロードバランシングにはなかった利点で、ルートドメイン（`www.capitalp.jp`ではなく、`capitalp.jp`）のようにCNAMEを利用することができないドメインでも、特に意識することなくDNS設定を行うことができる。今回は`k8s.capitalp.jp`にアクセスしたときだけk8s環境に接続するようにしてみよう。
+
+### ディスクへのアクセス
+
+現在のところ、第3章で構築したGCE環境（商用環境）と本章で構築したGKE環境（テスト環境）が同じDBに接続しているという致命的な自体にある。したがって、今回は永続ディスク`capitalp-nfs-k8s`の`wp-config.php`を次のように編集し、`k8s.capitalp.jp`にアクセスできるようにしたい。
+
+```
+define( 'WP_SITEURL', 'https://k8s.capitalp.jp' );
+define( 'WP_HOME', 'https://k8s.capitalp.jp' );
+```
+
+GKEでk8sプロジェクトを作成し、無事ノードが立ち上がると、その数だけインスタンスが作成される。このリストはCompute Engineのダッシュボードから「インスタンスグループ」をクリックすることで確認できる。
+
+![指定した分のインスタンスが作成されていた](../images/06_07_instance_group.png)
+
+この中の任意の1つに対してSSHでの接続してみよう。あとはここからファイルを編集すればよいのだが、ここでWordPressディレクトリが保存されている`/var/www/html`を表示しようとしても見つからない。なぜかというと、このインスタンスはあくまでDockerを動かしている仮想マシンであって、WordPressのPod本体ではないからだ。試しに動作しているDockerを`docker ps`コマンドでリストしてみよう。
+
+![動作しているDockerのプロセスがずらっと表示される](../images/06_08_ssh_logged_in.png)
+
+さて……どのコンテナにアクセスすればよいのだろうか？　たくさんありすぎて、そもそもどれが何をしているのかがさっぱりわからない。どうも、k8sにおいては`kubectl`を利用するのが正解なようだ。それでは、GCPのシェル画面からログアウトして、ローカルのMacで作業を続けよう。
+
+```
+# 稼働しているPodを調べる
+kubectl get pods
+
+NAME                         READY     STATUS    RESTARTS   AGE
+wordpress-654fbf865c-x6pv6   2/2       Running   0          7h
+
+# Podにbashでログインする
+kubectl exec -it wordpress-654fbf865c-x6pv6 bash
+
+# root@wordpress-654fbf865c-x6pv6:/var/www/html
+# ログインに成功したらしい。
+# ドキュメントルートのファイルを表示する。
+ls -alG /var/www/html/
+total 232
+drwxrwxrwx   6   48  4096 Apr 16 21:57 .
+drwxr-xr-x   3 root  4096 Apr 16 21:57 ..
+-rw-rw-r--   1   48   418 Apr  4 10:18 index.php
+-rw-rw-r--   1   48 19935 Apr  5 13:12 license.txt
+drwx------   2   48 16384 Apr  1 16:16 lost+found
+-rw-r--r--   1   48  1419 Apr  4 10:18 php_errors.log
+-rw-rw-r--   1   48 10303 Apr  5 13:12 readme.html
+-rw-rw-r--.  1   48    17 Apr  1 16:26 test.php
+-rw-rw-r--   1   48  5438 Apr  4 10:18 wp-activate.php
+drwxrwxr-x  10   48  4096 Apr  1 16:50 wp-admin
+-rw-rw-r--   1   48   364 Apr  4 10:18 wp-blog-header.php
+-rw-rw-r--   1   48  1627 Apr  4 10:18 wp-comments-post.php
+-rw-rw-r--   1   48  3793 Apr 16 21:57 wp-config-sample.php
+-rw-rw-r--   1   48  4723 Apr 16 21:57 wp-config.php
+drwxrwxr-x   9   48  4096 Apr 15 13:29 wp-content
+-rw-rw-r--   1   48  3669 Apr  4 10:19 wp-cron.php
+drwxrwxr-x  18   48 12288 Apr  1 16:51 wp-includes
+-rw-rw-r--   1   48  2422 Apr  4 10:19 wp-links-opml.php
+-rw-rw-r--   1   48  3306 Apr  4 10:19 wp-load.php
+-rw-rw-r--   1   48 36593 Apr  4 10:19 wp-login.php
+-rw-rw-r--   1   48  8048 Apr  4 10:19 wp-mail.php
+-rw-rw-r--   1   48 16246 Apr  4 10:19 wp-settings.php
+-rw-rw-r--   1   48 30071 Apr  4 10:19 wp-signup.php
+-rw-rw-r--   1   48  4620 Apr  4 10:19 wp-trackback.php
+-rw-rw-r--   1   48  3065 Apr  4 10:19 xmlrpc.php
+
+# wp-config.phpを編集する。
+vim wp-config.php
+bash: vim: command not found
+# vimが入っていない……インストールしてみよう。
+apt-get update
+apt-get install vim
+# 成功した。ファイルを編集し、WP_HOMEとWP_SITEURLを設定する。
+vim wp-config.php
+
+define( 'WP_SITEURL', 'https://k8s.capitalp.jp' );
+define( 'WP_HOME', 'https://k8s.capitalp.jp' );
+```
+
+さて、あとはDNSでドメイン`k8s.capitalp.jp`をクラスタのIPアドレス`35.190.238.251`に振り向ければ、`k8s.capitalp.jp`でアクセスできるはずだ。
+
+![無事表示された！](../images/06_09_capitalp_on_gke.png)
+
+表示成功！　あとは筆者の心配事として、「メディアのアップロードは可能なのか？」という点がある。第3章で「永続ディスクは読み取り専用」という情報を得ていたので、もしかしたらファイルの書き込みができないのではないだろうか。第4章でもメディアのアップロードで苦労していた。実際にやってみよう……と思ってメディアライブラリにアクセスしてみたところ、サイトが落ちてしまった。もしかしたら、VMをもっと大きなサイズにしなければならないのだろうか？
+
+![新しいノードを追加する](../images/06_10_add_new_node.png)
+
+既存のノードのマシンタイプは変更できないようなので、1.7GBのメモリを持つノードを最大で3台まで追加し、デフォルトのプールを削除してみた。ノードの構成を変更すると、適用まで結構な時間がかかるようなので、我慢強く待機する。その後、アップロードしてみると……。
+
+![やはり、エラー！](../images/06_11_upload_failure.png)
+
+予想通りエラーとなった。また、現在は1台のみとなっているWordPressデプロイメントの設定で`replica`を3にして、ノードに展開する数を増やすと、エラーが表示された。
+
+![設定ファイルをコンソールで編集したところ](../images/06_12_change_replica.png)
+
+つまり、先ほど`kubelctl`でログインしてファイルを編集できたのは、Podの数が1つしかなかったからであり、複数のレプリカが増減する状況になると、そうはいかないようだ。やはり、単体の永続ディスク`capitalp-nfs-k8s`を複数のPodから利用することは不可能で、NFSを作成する必要がある。
+
+## NFSサーバーの作成
+
+[公式マニュアル](https://cloud.google.com/kubernetes-engine/docs/how-to/stateful-apps)とWordPress向けのNFSを作成するチュートリアル[Running Highly Available WordPress With MySQL On Kubernetes](https://rancher.com/running-highly-available-wordpress-mysql-kubernetes/)があったので、それを参考にする。以下の作業は設定ファイルを利用するので、ローカルPCの`~/Documents/GCP/capitalp/`フォルダを前提とする。
+
+まずは、永続ディスクをデタッチする。`wordpress.yaml`の`VolumeMounts`と`volumes > wordpress-persistent-storage`を削除する。
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - image: wordpress
+          name: wordpress
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: 127.0.0.1:3306
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql-db-credentials
+                  key: username
+            - name: WORDPRESS_DB_PASSWORD
+          ports:
+            - containerPort: 80
+              name: wordpress
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: ["/cloud_sql_proxy",
+                    "-instances=capitalp-182517:asia-northeast1:capitalp-db-master=tcp:3306",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+      volumes:
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials
+```
+
+保存したら、`kubectl replace --force -f wordpress.yaml`で設定を置換する。うまくいけば、永続ディスクは使用リソースがなくなるはずだ。
+
+![使用リソースの欄が空白になっている](../images/06_12_empty_resource.png)
+
+続いて、NFSを作成していく。永続ディスク`capitalp-nfs-k8s`をアタッチしたNFSサーバーのPodを作成しよう。
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nfs-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: nfs-server
+  template:
+    metadata:
+      labels:
+        role: nfs-server
+    spec:
+      containers:
+      - name: nfs-server
+        image: gcr.io/google_containers/volume-nfs:0.8
+        ports:
+          - name: nfs
+            containerPort: 2049
+          - name: mountd
+            containerPort: 20048
+          - name: rpcbind
+            containerPort: 111
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /exports
+            name: nfs-pvc
+      volumes:
+        - name: nfs-pvc
+          gcePersistentDisk:
+            pdName: capitalp-nfs-k8s
+            fsType: ext4
+```
+
+このファイルを`nfs-server.yaml`として保存したら、`kubectl create -f nfs-server.yaml`でデプロイする。登録されたら、`kubectl get pods`でNFS用のPodが登録されているかを確認しよう。コントロールパネルの「Compute Engine > ディスク」でも該当するディスクの使用リソースが割り当てられているはずだ。
+
+続いて、このPodを内部ネットワークに公開するためのサービスを作成する。
+
+```
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfs-server
+spec:
+  ports:
+    - name: nfs
+      port: 2049
+    - name: mountd
+      port: 20048
+    - name: rpcbind
+      port: 111
+  selector:
+    role: nfs-server
+```
+
+`nfs-service.yaml`として保存したら、`kubectl create -f nfs-service.yaml`を実行。コントロールパネルの「Kubernets Engine > 検出と負荷分散」を見ると、クラスタ内部からアクセスできるIP`10.51.245.11`が提供されているのがわかる。
+
+![このIPはコマンドでも調べられる](../images/06_13_service_ip.png)
+
+なお、k8sでは、クラスタ内DNSで自動的に`サービス名.名前空間.svc.cluster.local`が割り当てられるようだ。したがって、このNFSのアドレスは`nfs-server.default.svc.cluster.local`となる。
+
+続いて、このNFSサーバーを永続ボリュームとして登録する。Kubernetesには[永続ボリューム](https://access.redhat.com/obsolete-documentation/ja/red-hat-enterprise-linux-atomic-host/7/paged/getting-started-with-containers/chapter-6-get-started-provisioning-storage-in-kubernetes)という概念があり、Podから利用するためのディスクを永続ボリュームとして登録し、さらに「永続ボリューム要求」を出す必要がある。「永続ディスクをNFSにして永続ボリュームとして登録のうえ永続ボリューム要求を出す」と書くと、何が何だかわからないのだが、k8sのお作法のようなものだと思っておくといいだろう。
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: nfs-server.default.svc.cluster.local
+    path: /
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 10Gi
+```
+
+上記を`nfs-pv.yaml`として保存したら、`kubectl create -f nfs-pv.yaml`としてデプロイ。コントロールパネルの「ストレージ」に「永続ボリュームの要求」として登録されているのが確認できる。
+
+![これまでは空だったところに入力されている](../images/06_14_pvc.png)
+
+それでは、WordPressの設定ファイル`wordpress.yaml`で、マウントするディスクの指定を書き換えよう。ついでに、Podの数も3に指定し、同時にいくつかのサーバーを立ち上げてしまおう。
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - image: wordpress
+          name: wordpress
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: 127.0.0.1:3306
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql-db-credentials
+                  key: username
+            - name: WORDPRESS_DB_PASSWORD
+          ports:
+            - containerPort: 80
+              name: wordpress
+          volumeMounts:
+            - name: nfs-server
+              mountPath: /var/www/html
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: ["/cloud_sql_proxy",
+                    "-instances=capitalp-182517:asia-northeast1:capitalp-db-master=tcp:3306",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+      volumes:
+        - name: nfs-server
+          persistentVolumeClaim:
+              claimName: nfs
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials
+```
+
+保存したら、`kubectl replace --force -f wordpress.yaml`で置換を行う。さて、これでPodが再起動したら、無事ファイルが読み込まれるはずだ。なお、先ほど画像をアップロードできなかったのは、NFSのパーミッションのせいであった。NFS内の所有権をWordPressコンテナのApacheユーザー(www-data) に合わせておくと問題なく画像をアップロードできる。
+
+```
+# ローカルでの作業。Podのリストを表示
+kubectl get pods
+NAME                         READY     STATUS    RESTARTS   AGE
+nfs-server-767c7b9-5th4f     1/1       Running   0          1h
+wordpress-567647cdf6-cmlks   2/2       Running   0          54m
+
+# WordPressコンテナにログイン。
+kubectl exec -it wordpress-567647cdf6-cmlks bash
+# www-dataのユーザーIDを調べる
+cat /etc/passwd
+# -> www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+# ログアウト
+
+# NFSにログイン。
+kubectl exec -it nfs-server-767c7b9-5th4f bash
+# マウントしているディスクの所有権をID33(www-data)に。
+chown -R 33:33 /exports
+```
+
+さて、それではWordPressコンテナの数を複数にしてみよう。`wordpress.yaml`の`spec > replicas`を3にする。
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 3
+```
+
+それではこれを`kubectl replace -f wordpress.yaml --force`でデプロイしよう。
+
+```
+kubectl get pods
+
+NAME                         READY     STATUS    RESTARTS   AGE
+nfs-server-767c7b9-5th4f     1/1       Running   0          1h
+wordpress-567647cdf6-57sgd   2/2       Running   0          7s
+wordpress-567647cdf6-cmlks   2/2       Running   0          1h
+wordpress-567647cdf6-zfs6n   2/2       Running   0          7s
+```
+
+コンテナの数が自動で増えたようだ。では、複数台構成で無事画像をアップロードできるのだろうか？
+
+![できた！](../images/06_15_uploaded_img.png)
+
+ついにファイルのアップロードを確認した。プラグインのインストールも問題なくできているようである。これでようやくまともに動くWordPress環境が完成した。
 
 ## その他のタスク
 
 さて、実際にk8s環境で運用するとなると、他にやるべきこといくつかある。ざっと挙げてみよう。
 
+### オートスケール
+
+Podの数が自動で増減するような仕組みは是非ともほしいところだ。スケールの設定はコマンドで確認することができる。
+
+```
+# 現在の状態を確認
+kubectl get deploy wordpress
+NAME        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+wordpress   3         3         3            3           7m
+
+# CPU使用率50%で最大6 Podまで増やす。
+kubectl autoscale deployment wordpress --cpu-percent=50 --min=1 --max=6
+
+# さっきまで3台だったのが1台になった。
+kubectl get pods
+NAME                         READY     STATUS    RESTARTS   AGE
+nfs-server-767c7b9-5th4f     1/1       Running   0          1h
+wordpress-567647cdf6-cmlks   2/2       Running   0          1h
+```
+
+ノードのスケールアウト（台数を増やす）、ノードのスケールアップ（VMの性能を上げる）、Podのスケールアウト（Podの数を増やす）を組み合わせることがコンテナ技術のキモなので、ここら辺は色々とチューニングのやりようがありそうだ。ブログ記事[GKEでPodとNodeをAutoscalingする](https://qiita.com/k-hal/items/5f060fdbafa3d29b3499)が詳しかったので参考にしてほしい。
+
 ### デプロイメント
 
-Webサイトを運営する以上、当然ながらファイルはデプロイすることができなくてはならない。一番手っ取り早いのは、WordPressのルートディレクトリである永続ディスク`capitalp-nfs-k8s`にSSH鍵を付与し、アップロードすることだろう。
+Webサイトを運営する以上、当然ながらファイルはデプロイすることができなくてはならない。Gitなどで自動デプロイ専用のノードを用意するなど、すればかなりモダンな開発環境になるだろうが、毎回そこまでできるかというと、現実的ではない。SFTPによるアップロードしかできない人材がアサインされることもままあるだろうし、その場合の選択肢も用意しておくべきだろう。
 
-Gitなどで管理している場合、デプロイ専用のノードを用意するなど、一工夫必要になってくるかもしれない。
+### MySQLの冗長化
 
-### CRONの処理
+Cloud SQLはリードレプリカ（読み取り専用のコピー）とフェイルオーバーレプリケーション（バックアップを取っておいて、問題があったら入れ替える）があるようだ。ただし、最近のWordPress業界で流行っているのは、MySQLの冗長化を頑張るよりも、キャッシュなどを使ってそもそもDBにアクセスする回数を減らすことである。HyperDBなどのMySQL冗長化の試みもいくつかあったが、最近はあまり熱心にメンテナンスされていない印象だ。
 
-Caiptal PではWordPressに必須の処理`WP_CRON`を[外部コマンドで行っている](https://capitalp.jp/2018/02/10/best-practice-of-batch-processing-in-wp/)のだが、クラスタ内の特定のノードにだけCron処理を行わせるためにどうしたらよいのかについても検討する必要があるだろう。
+クラウドサービスの手軽さを享受しつつ、なるべくDBに負荷をかけない運用を心がけるべきだろう。
+
+### CRON、コマンドラインでの処理
+
+Caiptal PではWordPressに必須の処理`WP_CRON`を[外部コマンドで行っている](https://capitalp.jp/2018/02/10/best-practice-of-batch-processing-in-wp/)のだが、クラスタ内の特定のPodにだけCron処理を行わせるためにどうしたらよいのかについても検討する必要があるだろう。
 
 ### 固定IP
 
@@ -351,8 +733,8 @@ Caiptal PではWordPressに必須の処理`WP_CRON`を[外部コマンドで行�
 
 ## まとめ
 
-筆者の感想としては、**慣れてしまえばそれほど難しくない**という一語に尽きる。k8sを利用する最大のメリットは、コンテナ技術による水平展開だろう。
+k8sを利用する最大のメリットは、コンテナ技術による水平展開だろう。負荷分散に関しては、正直なところGCEでも似たようなことはできるし、そもそもAWSにも同等の機能は存在する。Amimotoに代表されるAMI(Amazon Machine Image)のような知見が豊富にあることを考えると、もしかしたらAWSの方が簡単かもしれない。
 
-負荷分散に関しては、正直なところGCEでも似たようなことはできるし、そもそもAWSにも同等の機能は存在する。Amimotoに代表されるAMI(Amazon Machine Image)のような知見が豊富にあることを考えると、もしかしたらAWSの方が簡単かもしれない。
+しかし、`gcloud`に代表されるSDKとREST可能な管理画面操作は、ホスティングなどの「大量の人にWordPress環境を提供するビジネス」を考えている人には大いなるメリットをもたらすだろう。AWSよりもシンプルな構成もビジネスの発展を加速してくれる一因となるはずだ。料金に関してはAWSと比較すると確かに安い印象だ。
 
-しかし、`gcloud`に代表されるSDKとREST可能な管理画面操作は、ホスティングなどの「大量の人にWordPress環境を提供するビジネス」を考えている人には大いなるメリットをもたらすだろう。AWSよりもシンプルな構成もビジネスの発展を加速してくれる一因となるはずだ。
+いずれにせよ、コンテナ技術がいまクラウド業界でもっとも注目されている技術なのは間違いない。WordPressでコンテナ入門するのも決して悪くない投資だと筆者は断言したい。
