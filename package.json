@@ -5,10 +5,9 @@
   "main": "gulpfile.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "gulp server",
+    "start": "gulp server:epub",
     "build": "gulp build",
-    "gulp": "gulp",
-    "print": "electron-pdf ./html/manuscripts/00_toc.html out/wp-gcp-log.pdf"
+    "gulp": "gulp"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,11 @@
+extends _epub
+
+block body-content
+    .container.container-titlepage
+        h1.titlepage-title
+            span.titlepage-tagline WordPress on Google Cloud Platform
+            each line in title.split('  ')
+                span.titlepage-string=line
+        p.titlepage-author （編）Capital P　（著）高橋文樹・宮内隆行
+        p
+          img.titlepage-img(src='../images/00_character.png' alt='Capital P GCP Girl')

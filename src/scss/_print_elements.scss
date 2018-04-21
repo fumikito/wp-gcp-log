@@ -1,0 +1,35 @@
+img {
+  -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+  filter: grayscale(100%);
+}
+
+
+// Container padding for preview
+.container{
+  @media only screen {
+    padding: 20mm;
+  }
+}
+
+// Body elements.
+.story-content{
+  a{
+    &:after{
+      margin-left: 1mm;
+      margin-right: 1mm;
+      content: "<" attr(href) ">";
+      font-family: $monospace;
+      word-break: break-all;
+      white-space: -moz-pre-wrap;
+      color: $link-href-color;
+    }
+    &:link, &:visited{
+      color: $link-color;
+      text-decoration: none;
+    }
+    &:hover, &:active{
+      text-decoration: underline;
+      color: $link-color
+    }
+  }
+}

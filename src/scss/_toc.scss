@@ -33,9 +33,10 @@
 }
 
 .toc-title {
+  $toc-title-border: 1mm double #eee !default;
   text-align: center;
   padding-bottom: 1em;
-  border-bottom: 1mm double #eee;
+  border-bottom: $toc-title-border;
   margin-bottom: 1em;
 }
 

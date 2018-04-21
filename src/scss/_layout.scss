@@ -9,9 +9,6 @@ body{
 
 .container{
   padding: 0 1em;
-  @media only screen {
-    padding: 20mm;
-  }
   &-toc{
     page-break-before: avoid;
   }

@@ -1,7 +1,17 @@
-$pre-bg: #eee;
-$pre-color: #000;
-$link-color: #000;
-$link-href-color: #aaa;
+$pre-bg: #eee !default;
+$pre-color: #000 !default;
+$link-color: #000 !default;
+$link-href-color: #aaa !default;
+
+$h2-color: inherit !default;
+$h2-border-style: 1px dashed #ddd !default;
+
+$h3-color: inherit !default;
+$h3-border-padding: 3mm !default;
+$h3-border-style: $h3-border-padding solid #eee !default;
+
+$figcaption-margin: 5mm !default;
+
 
 .story-content {
   h1, h2, h3, h4, h5 {
@@ -11,6 +21,7 @@ $link-href-color: #aaa;
   }
   h1 {
     font-size: 2em;
+    // 著者名
     & + p{
       text-align: right;
       font-size: 1.2em;
@@ -20,19 +31,21 @@ $link-href-color: #aaa;
     }
   }
   h2 {
-    border-bottom: 1px dashed #ddd;
+    color: $h2-color;
+    font-size: 1.8em;
+    border-bottom: $h2-border-style;
     padding-bottom: 1em;
   }
   h3 {
+    color: $h3-color;
     font-size: 1.5em;
-    border-left: 3mm solid #eee;
-    padding-left: 3mm;
+    border-left: $h3-border-style;
+    padding-left: $h3-border-padding;
   }
   h4{
     font-weight: bold;
     font-size: $body-size;
   }
-
   p{
     line-height: 1.8;
     margin: 0;
@@ -88,29 +101,11 @@ $link-href-color: #aaa;
       content: "”";
       bottom: -0.5em;
       right: 0;
-
     }
   }
 
   a{
     font-family: $sans;
-    &:after{
-      margin-left: 1mm;
-      margin-right: 1mm;
-      content: "<" attr(href) ">";
-      font-family: $monospace;
-      word-break: break-all;
-      white-space: -moz-pre-wrap;
-      color: $link-href-color;
-    }
-    &:link, &:visited{
-      color: $link-color;
-      text-decoration: none;
-    }
-    &:hover, &:active{
-      text-decoration: underline;
-      color: $link-color
-    }
   }
 
 
@@ -159,12 +154,11 @@ code {
 
 
 img{
-  -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
-  filter: grayscale(100%);
   max-width: 100%;
   width: auto;
   height: auto;
 }
+
 figure {
   text-align: center;
   padding: 1em;
@@ -178,8 +172,8 @@ figure {
 
 figcaption {
   color: #888;
-  font-size: 9pt;
-  margin-top: 5mm;
+  font-size: 0.85em;
+  margin-top: $figcaption-margin;
   font-family: $sans;
 }
 

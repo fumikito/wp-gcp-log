@@ -1,0 +1,12 @@
+extends _epub
+
+block body-content
+    .container.container-toc
+        h1.toc-title=title
+        nav
+            table.toc-list
+                each link in toc
+                    tr.toc-row
+                        th
+                            a(href=link.href)=link.title
+                        td 00

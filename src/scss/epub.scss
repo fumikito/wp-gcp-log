@@ -1,0 +1,36 @@
+@charset "UTF-8";
+
+$body-size: 14px;
+
+
+$h3-border-padding: 0.5em;
+$h3-color: #5076B3;
+$h3-border-style: 1em solid #5076B3;
+
+$h2-color: $h3-color;
+$h2-border-style: 1px dashed $h2-color;
+
+$toc-title-border: 3px double #eee;
+
+
+@import "typography";
+@import "layout";
+@import "toc";
+@import "markup";
+
+.story-content{
+  a{
+    &:link, &:visited{
+      color: $link-color;
+      text-decoration: underline;
+    }
+    &:hover, &:active{
+      color: $link-href-color;
+      text-decoration: none;
+    }
+  }
+
+  tbody tr td:first-child{
+    white-space: nowrap;
+  }
+}
