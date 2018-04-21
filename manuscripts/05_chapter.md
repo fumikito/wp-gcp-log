@@ -167,11 +167,11 @@ https://console.cloud.google.com/home/dashboard
 
 まず以下のように、左側のメニューでお支払いをクリックする。
 
-![](https://www.evernote.com/l/ABVUYCkdR5lC_Y_jS28Z1sj8SDw9dVhoHb4B/image.png)
+![](../images/05_02_image.png)
 
 次に画面の指示に従って請求先アカウントをリンクしよう。その後以下のような画面になれば成功である。
 
-![](https://www.evernote.com/l/ABULHs4AE7RMBL1f7Xim5rTwpt2guy1R9SsB/image.png)
+![](../images/05_03_image.png)
 
 ### API の有効化
 
@@ -189,17 +189,17 @@ $ gcloud services enable compute.googleapis.com sqladmin.googleapis.com
 
 https://console.cloud.google.com/apis/credentials
 
-![](https://www.evernote.com/l/ABVbRNIFNURGTapnLnUBbKpn4UVuXCXns3EB/image.png)
+![](../images/05_04_image.png)
 
 「認証情報を作成」クリックすると以下のようにプルダウンメニューが表示されるので、「サービスアカウントキー」を選択。
 
-![](https://www.evernote.com/l/ABXDSb0BhT5OP4uBsC_5JNYyFgdKBWwm61UB/image.png)
+![](../images/05_05_image.png)
 
 次に以下の画面で必要な権限を割り当てよう。
 
 まず、サービスアカウント名には任意の文字列たとえば「プロジェクト編集者」と入力し、次に役割で [Project] - [編集者] を選択。最後にキーのタイプで [JSON] を選択し、作成をクリックしよう。
 
-![](https://www.evernote.com/l/ABUUA3KEqGlKDIWFqo-twUq2NhTgOXXZq1AB/image.png)
+![](../images/05_06_image.png)
 
 JSON ファイルがダウンロードされるので、このファイルはどこかに大切に保存しよう。もし紛失した場合は、あたらしくサービスアカウントを作成する必要がある。
 
@@ -304,7 +304,7 @@ $ wp server
 
 ブラウザで、`http://localhost:8080` にアクセスして WordPress のインストーラーが表示されていれば成功である。 ついでにインストールを完了させておこう。
 
-![](https://www.evernote.com/l/ABUfoesBDoxNmor44A4unJYvSQ4qRqZT2MgB/image.png)
+![](../images/05_07_image.png)
 
 ### WordPress 本体、プラグイン、テーマ、言語ファイルのアップデート
 
@@ -412,7 +412,7 @@ Plugin gcs details:
 
 次に、Google Cloud Storage plugin の管理画面でメディアをアップロードするためのバケット名を指定する。
 
-![](https://www.evernote.com/l/ABVb-Wq7Q5hMyIoQsUmtdRzxynxfcRK3kYcB/image.png)
+![](../images/05_08_image.png)
 
 バケットは以下のコマンドで新規に作成することができる。
 
@@ -438,7 +438,7 @@ $ gsutil iam ch allUsers:objectViewer gs://[You_Bucket_Name]
 
 最後に念のためメディアをアップロードして動作確認しておくことをおすすめする。
 
-![](https://www.evernote.com/l/ABX9Jj_4HzdCFaHxDLLAQ-5gavpmdip1CosB/image.png)
+![](../images/05_09_image.png)
 
 ## GAE の感想
 
@@ -478,7 +478,7 @@ req/s           :       0.52        0.58        0.54        0.01    68.00%
 
 ただし、Google が提供するモバイルスピードの診断ツールでは良い結果がでたので、デフォルトのままでも問題になるほど遅いわけではない。
 
-![](https://www.evernote.com/l/ABW1S5G3-U1Id67SvtX64aFr6ndpjzc29hIB/image.png)
+![](../images/05_10_image.png)
 
 前の章でも述べられているが、メールについてはいろいろノウハウの蓄積が必要かもしれないと思った。GAE では PHP の `mail()` が利用できないので何らかの外部サービスとの連携が必須である。
 

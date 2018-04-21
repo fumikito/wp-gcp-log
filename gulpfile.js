@@ -46,17 +46,19 @@ gulp.task('sass', function () {
         ]
       }))
       .pipe($.autoprefixer({browsers: ['last 2 version', '> 5%']}))
-      .pipe(gulp.dest('./epub/contents/css'))
+      .pipe(gulp.dest('./epub/OEBPS/css'))
   );
 });
 
 // ePub task
 gulp.task('epub', function () {
   var compiler = pug.compileFile('src/templates/chapter.pug');
-  var md = new MarkdonwIt();
+  var md = new MarkdonwIt({
+    xhtmlOut: true
+  });
   var dl = require('markdown-it-deflist');
   md = md.use(dl);
-  mkdirp.sync('epub/contents/documents');
+  mkdirp.sync('epub/OEBPS/documents');
     // Compile contents
     fs.readdir('./manuscripts', function (err, files) {
       var tocs = [];
@@ -80,9 +82,9 @@ gulp.task('epub', function () {
         tocs.push({
           id: id,
           title: title[1],
-          href: id + '.html'
+          href: id + '.xhtml'
         });
-        fs.writeFile('epub/contents/documents/' + id + '.html', html, function (err) {
+        fs.writeFile('epub/OEBPS/documents/' + id + '.xhtml', html, function (err) {
           if (err) {
             throw err;
           }
@@ -97,7 +99,10 @@ gulp.task('epub', function () {
           },
           pretty: true
         }))
-        .pipe(gulp.dest('epub/contents/documents'));
+        .pipe($.rename({
+          extname: '.xhtml'
+        }))
+        .pipe(gulp.dest('epub/OEBPS/documents'));
     });
     // Generate title page.
     gulp.src('src/templates/00_title.pug')
@@ -107,7 +112,10 @@ gulp.task('epub', function () {
         },
         pretty: true
       }))
-      .pipe(gulp.dest('epub/contents/documents'))
+      .pipe($.rename({
+        extname: '.xhtml'
+      }))
+      .pipe(gulp.dest('epub/OEBPS/documents'))
 });
 
 // Pug task
@@ -164,7 +172,7 @@ gulp.task('imagemin', function () {
       use        : [pngquant()]
     }))
     .pipe(gulp.dest('./html/images'))
-    .pipe(gulp.dest('./epub/contents/images'));
+    .pipe(gulp.dest('./epub/OEBPS/images'));
 });
 
 // watch print
@@ -182,9 +190,9 @@ gulp.task('sync:print', function () {
 // watch epub
 gulp.task('sync:epub', function () {
   browserSync.init({
-    files : ["epub/contents/**/*"],
+    files : ["epub/OEBPS/**/*"],
     server: {
-      baseDir: "./epub/contents",
+      baseDir: "./epub/OEBPS",
       index  : "documents/00_toc.html"
     },
     reloadDelay: 2000
@@ -205,7 +213,7 @@ gulp.task('watch', function () {
   // Minify Image
   gulp.watch('images/**/*', ['imagemin']);
   // Sync browser sync.
-  gulp.watch([ 'html/**/*', 'epub/documents/**/*' ], ['reload']);
+  gulp.watch([ 'html/**/*', 'epub/OEBPS/**/*' ], ['reload']);
 
 });
 

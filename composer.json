@@ -1,0 +1,20 @@
+{
+    "name": "fumikito/wp-gcp-log",
+    "description": "A perfect guide for WordPress on Google Cloud Platform",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "fumikito",
+            "email": "guy@hametuha.com"
+        }
+    ],
+    "scripts": {
+        "wget": "php bin/wget.php",
+        "epub": "php bin/epub.php"
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "hametuha/hamepub": "1.0.x-dev"
+    }
+}

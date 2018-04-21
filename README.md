@@ -54,11 +54,23 @@ npm start
 
 ### PDFへのビルド
 
-W.I.P
+```
+npm run gulp build
+npm run gulp server:print
+```
+
+ブラウザで`localhost:3000`にアクセスし、A5でPDFとして保存するといい感じになります。
 
 ### ePubへのビルド
 
-W.I.P
+composerを使います。
+
+```
+npm build
+composer epub
+```
+
+これでePubが出力されます。
 
 ## ライセンス
 

@@ -1,12 +1,14 @@
-extends _epub
-
-block body-content
+<!DOCTYPE html>
+html(xmlns="http://www.w3.org/1999/xhtml" xml:lang='ja' xmlns:epub="http://www.idpf.org/2007/ops")
+  head
+    meta(charset='utf-8')
+    title=title
+    link(rel='stylesheet' href='../css/epub.css')
+  body
     .container.container-toc
         h1.toc-title=title
-        nav
-            table.toc-list
-                each link in toc
-                    tr.toc-row
-                        th
-                            a(href=link.href)=link.title
-                        td 00
+        nav(epub:type='toc' id='toc')
+            ol.toc-list
+              each link in toc
+                  li.toc-item
+                    a.toc-link(href=link.href)=link.title
