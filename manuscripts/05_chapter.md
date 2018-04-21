@@ -134,7 +134,7 @@ $ gcloud init
 
 このコマンドを初めて実行した場合には、以下のようにブラウザで oAuth でのログイン画面が開くので、Google Cloud を利用したい Google アカウントでログインしてみよう。
 
-![](https://www.evernote.com/l/ABVSmjxw4-JEVKuztxOY_aVGVU6dvbgxOWcB/image.png)
+![](../images/05_01_image.png)
 
 次に、どのプロジェクトを使用するかの質問が表示される。
 
