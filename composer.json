@@ -11,10 +11,12 @@
     ],
     "scripts": {
         "wget": "php bin/wget.php",
-        "epub": "php bin/epub.php"
+        "epub": "php bin/epub.php",
+        "qr": "php -S localhost:8000 -t qrcode"
     },
     "minimum-stability": "dev",
     "require": {
-        "hametuha/hamepub": "1.0.x-dev"
+        "hametuha/hamepub": "1.0.x-dev",
+        "chillerlan/php-qrcode": "dev-master"
     }
 }
